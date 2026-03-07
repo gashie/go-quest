@@ -1,0 +1,65 @@
+{{define "home.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoQuest - Learn Go from Node.js</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/animations.css">
+</head>
+<body>
+    {{template "nav" .}}
+
+    <div id="xp-popup" class="xp-popup hidden"></div>
+
+    <main class="quest-map">
+        <div class="quest-header">
+            <h1>Your Go Quest</h1>
+            <p class="quest-subtitle">Learn Go through interactive lessons. You know Node.js — now conquer Go.</p>
+        </div>
+
+        <div class="phase-path" id="phase-path">
+            {{range .Phases}}
+            <div class="phase-node" data-phase-id="{{.ID}}" data-xp-required="{{.XPRequired}}" data-slug="{{.Slug}}">
+                <div class="phase-header">
+                    <div class="phase-meta">
+                        <span class="phase-level-tag {{.Level | lower}}">{{.Level}}</span>
+                        <span class="phase-number">Phase {{.ID}}</span>
+                        {{if gt .XPRequired 0}}
+                        <span class="phase-lock" data-xp="{{.XPRequired}}">Unlocks at {{.XPRequired}} XP</span>
+                        {{end}}
+                    </div>
+                    <h2>{{.Name}}</h2>
+                    <p class="phase-desc">{{.Description}}</p>
+                    <div class="phase-progress-bar">
+                        <div class="phase-progress-fill" data-phase="{{.Slug}}"></div>
+                    </div>
+                </div>
+
+                <div class="lesson-grid">
+                    {{range .Lessons}}
+                    <a href="/lesson/{{.Slug}}" class="lesson-node" data-slug="{{.Slug}}">
+                        <span class="lesson-number-badge">{{.Number}}</span>
+                        <span class="lesson-status-icon"></span>
+                        <div class="lesson-info">
+                            <span class="lesson-title">{{.Title}}</span>
+                            <div class="lesson-rewards">
+                                <span class="lesson-xp">+{{.XPReward}} XP</span>
+                                <span class="lesson-coins">+{{.CoinReward}} coins</span>
+                            </div>
+                        </div>
+                        {{if not .Playable}}<span class="lesson-tag view-only">View Only</span>{{end}}
+                    </a>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </main>
+
+    <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
+{{end}}

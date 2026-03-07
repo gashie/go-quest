@@ -1,0 +1,172 @@
+{{define "lesson.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Lesson.Title}} - GoQuest</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/lesson.css">
+    <link rel="stylesheet" href="/static/css/animations.css">
+    <!-- Prism.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <!-- CodeMirror -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+</head>
+<body>
+    {{template "nav" .}}
+
+    <div id="xp-popup" class="xp-popup hidden"></div>
+
+    <main class="lesson-container" data-slug="{{.Lesson.Slug}}" data-phase="{{.Phase.Slug}}">
+        <div class="lesson-header">
+            <div class="lesson-nav-top">
+                <a href="/" class="back-link">&larr; Quest Map</a>
+                <div class="lesson-nav-arrows">
+                    {{if .Lesson.PrevSlug}}<a href="/lesson/{{.Lesson.PrevSlug}}" class="nav-arrow">&larr; Prev</a>{{end}}
+                    {{if .Lesson.NextSlug}}<a href="/lesson/{{.Lesson.NextSlug}}" class="nav-arrow">Next &rarr;</a>{{end}}
+                </div>
+            </div>
+            <div class="lesson-title-row">
+                <span class="lesson-number-lg">{{.Lesson.Number}}</span>
+                <h1>{{.Lesson.Title}}</h1>
+                <div class="lesson-rewards-row">
+                    <span class="lesson-xp-badge">+{{.Lesson.XPReward}} XP</span>
+                    <span class="lesson-coin-badge">+{{.Lesson.CoinReward}} coins</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="lesson-tabs">
+            <button class="tab-btn active" data-tab="learn" data-step="0">1. Learn</button>
+            <button class="tab-btn locked" data-tab="compare" data-step="1">2. Compare</button>
+            <button class="tab-btn locked" data-tab="practice" data-step="2">3. Practice</button>
+            <button class="tab-btn locked" data-tab="challenge" data-step="3">4. Challenge</button>
+            <button class="tab-btn locked" data-tab="test" data-step="4">5. Test</button>
+        </div>
+
+        <!-- Tab 1: Learn -->
+        <div class="tab-panel active" id="tab-learn">
+            <div class="learn-content">
+                {{if .Lesson.NodeCode}}
+                <h2>How it works in Node.js</h2>
+                <pre><code class="language-javascript">{{.Lesson.NodeCode}}</code></pre>
+                {{end}}
+                <div class="explanation" id="learn-explanation"></div>
+
+                <!-- Teacher Tips -->
+                <div class="teacher-tips" id="teacher-tips"></div>
+            </div>
+            <button class="btn-next-tab btn-unlock-next" data-next="compare">Got it! Show me the Go version &rarr;</button>
+        </div>
+
+        <!-- Tab 2: Compare -->
+        <div class="tab-panel" id="tab-compare">
+            <div class="compare-split">
+                <div class="compare-pane">
+                    <h3 class="pane-label node-label">Node.js</h3>
+                    <pre><code class="language-javascript">{{.Lesson.NodeCode}}</code></pre>
+                </div>
+                <div class="compare-pane">
+                    <h3 class="pane-label go-label">Go</h3>
+                    <pre><code class="language-go">{{.Lesson.GoCode}}</code></pre>
+                </div>
+            </div>
+            <div class="annotations" id="annotations"></div>
+            <button class="btn-next-tab btn-unlock-next" data-next="practice">Ready to write Go &rarr;</button>
+        </div>
+
+        <!-- Tab 3: Practice -->
+        <div class="tab-panel" id="tab-practice">
+            <h2>Try it yourself</h2>
+            <p>Write the Go equivalent. The Node.js code is shown for reference.</p>
+            <div class="practice-split">
+                <div class="ref-pane">
+                    <h3 class="pane-label node-label">Reference (Node.js)</h3>
+                    <pre><code class="language-javascript">{{.Lesson.NodeCode}}</code></pre>
+                </div>
+                <div class="editor-pane">
+                    <h3 class="pane-label go-label">Your Go Code</h3>
+                    <div id="practice-editor"></div>
+                </div>
+            </div>
+            <div class="editor-controls">
+                <button id="btn-run" class="btn-primary">&#9654; Run Code</button>
+                <button id="btn-reset" class="btn-secondary">Reset</button>
+                <button id="btn-solution" class="btn-ghost">Show Solution</button>
+            </div>
+            <div id="practice-output" class="output-panel hidden">
+                <h4>Output</h4>
+                <pre id="output-text"></pre>
+            </div>
+            <button class="btn-next-tab btn-unlock-next" data-next="challenge">Try the Challenge &rarr;</button>
+        </div>
+
+        <!-- Tab 4: Challenge -->
+        <div class="tab-panel" id="tab-challenge">
+            <div class="challenge-header">
+                <h2>Challenge</h2>
+                <span class="bonus-xp" id="bonus-xp-display"></span>
+            </div>
+            <div class="challenge-prompt" id="challenge-prompt"></div>
+            <div id="challenge-editor"></div>
+            <div class="editor-controls">
+                <button id="btn-challenge-run" class="btn-primary">&#9654; Submit</button>
+                <button id="btn-hint" class="btn-secondary">Hint</button>
+                <button id="btn-challenge-reset" class="btn-ghost">Reset</button>
+            </div>
+            <div id="challenge-result" class="output-panel hidden"></div>
+            <button class="btn-next-tab btn-unlock-next hidden" id="btn-to-test" data-next="test">Run the Tests &rarr;</button>
+        </div>
+
+        <!-- Tab 5: Test -->
+        <div class="tab-panel" id="tab-test">
+            <h2>Automated Tests</h2>
+            <p>Your code must pass all tests to complete this lesson.</p>
+            <div id="test-editor"></div>
+            <div class="editor-controls">
+                <button id="btn-run-tests" class="btn-primary">&#9654; Run Tests</button>
+            </div>
+            <div id="test-results" class="test-results"></div>
+        </div>
+
+        <!-- Lesson Complete + Next Lesson -->
+        <div id="lesson-complete" class="lesson-complete hidden">
+            <div class="complete-card">
+                <div class="complete-icon">&#10003;</div>
+                <h2>Lesson Complete!</h2>
+                <div class="complete-rewards">
+                    <span class="reward-xp">+<span id="total-xp-earned">0</span> XP</span>
+                    <span class="reward-coins">+<span id="total-coins-earned">0</span> coins</span>
+                </div>
+                {{if .Lesson.NextSlug}}
+                <a href="/lesson/{{.Lesson.NextSlug}}" class="btn-primary btn-next-lesson">Next Lesson: {{.Lesson.NextSlug}} &rarr;</a>
+                {{else}}
+                <a href="/" class="btn-primary btn-next-lesson">Back to Quest Map</a>
+                {{end}}
+            </div>
+        </div>
+
+        {{if not .Lesson.Playable}}
+        <div class="view-only-banner">
+            This lesson requires system resources not available in the browser.
+            Study the code comparison and complete the quiz-style challenge.
+        </div>
+        {{end}}
+    </main>
+
+    <!-- Lesson data for JS -->
+    <script id="lesson-data" type="application/json">{{json .Lesson}}</script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/go/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script type="module" src="/static/js/modules/lessonView.js"></script>
+</body>
+</html>
+{{end}}

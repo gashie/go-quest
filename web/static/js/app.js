@@ -1,0 +1,124 @@
+import { Progress } from './modules/progress.js';
+import { Gamification, BADGES } from './modules/gamification.js';
+
+const progress = new Progress();
+const gamification = new Gamification(progress);
+
+// ---- Update Navigation XP/Level ----
+function updateNav() {
+    const state = progress.getState();
+    const levelEl = document.getElementById('nav-level');
+    const xpEl = document.getElementById('nav-xp');
+    const fillEl = document.getElementById('nav-xp-fill');
+    if (levelEl) levelEl.textContent = `Lvl ${state.level}`;
+    if (xpEl) xpEl.textContent = `${state.totalXP} XP`;
+    if (fillEl) fillEl.style.width = `${gamification.percentToNextLevel(state.totalXP)}%`;
+    const coinsEl = document.getElementById('nav-coins');
+    if (coinsEl) coinsEl.textContent = `${state.totalCoins || 0} coins`;
+}
+
+// ---- Quest Map: Phase Lock/Unlock ----
+function updateQuestMap() {
+    const phaseNodes = document.querySelectorAll('.phase-node');
+    if (!phaseNodes.length) return;
+
+    const state = progress.getState();
+
+    phaseNodes.forEach(node => {
+        const xpReq = parseInt(node.dataset.xpRequired, 10);
+        if (state.totalXP >= xpReq) {
+            node.classList.add('unlocked');
+            node.classList.remove('locked');
+        } else {
+            node.classList.add('locked');
+            node.classList.remove('unlocked');
+        }
+    });
+
+    // Update lesson node completion states
+    document.querySelectorAll('.lesson-node').forEach(node => {
+        const slug = node.dataset.slug;
+        if (!slug) return;
+        const lessonState = state.completedLessons[slug];
+
+        if (lessonState) {
+            const allDone = lessonState.learnDone && lessonState.compareDone &&
+                lessonState.practiceDone && lessonState.challengeDone && lessonState.testDone;
+            if (allDone) {
+                node.classList.add('completed');
+                node.classList.remove('in-progress');
+            } else {
+                node.classList.add('in-progress');
+                node.classList.remove('completed');
+            }
+        }
+    });
+
+    // Update phase progress bars
+    document.querySelectorAll('.phase-node').forEach(node => {
+        const slug = node.dataset.slug;
+        const lessons = node.querySelectorAll('.lesson-node');
+        if (!lessons.length) return;
+
+        let completed = 0;
+        lessons.forEach(l => {
+            if (l.classList.contains('completed')) completed++;
+        });
+
+        const pct = Math.round((completed / lessons.length) * 100);
+        const fill = node.querySelector('.phase-progress-fill');
+        if (fill) fill.style.width = `${pct}%`;
+    });
+}
+
+// ---- Dashboard ----
+function updateDashboard() {
+    const state = progress.getState();
+
+    const dashLevel = document.getElementById('dash-level');
+    const dashXP = document.getElementById('dash-xp');
+    const dashCompleted = document.getElementById('dash-completed');
+    const dashBadges = document.getElementById('dash-badges');
+
+    if (dashLevel) dashLevel.textContent = state.level;
+    if (dashXP) dashXP.textContent = state.totalXP;
+    if (dashCompleted) dashCompleted.textContent = `${progress.countCompleted()}/64`;
+    if (dashBadges) dashBadges.textContent = state.badges.length;
+
+    // Badge gallery
+    const gallery = document.getElementById('badge-gallery');
+    if (gallery) {
+        gallery.innerHTML = '';
+        BADGES.forEach(badge => {
+            const earned = state.badges.includes(badge.id);
+            const card = document.createElement('div');
+            card.className = `badge-card ${earned ? 'earned' : 'locked'}`;
+            card.innerHTML = `
+                <div class="badge-icon">${badge.icon}</div>
+                <div class="badge-name">${badge.name}</div>
+                <div class="badge-desc">${badge.desc}</div>
+            `;
+            gallery.appendChild(card);
+        });
+    }
+
+    // Phase progress rows
+    document.querySelectorAll('.phase-progress-row').forEach(row => {
+        const phase = row.dataset.phase;
+        // For now, show basic progress
+        const fill = row.querySelector('.progress-fill');
+        const pctEl = row.querySelector('.progress-pct');
+        if (fill && pctEl) {
+            // Approximate based on total lessons per phase
+            const completedCount = progress.countCompleted();
+            const pct = Math.min(100, Math.round((completedCount / 64) * 100));
+            fill.style.width = `${pct}%`;
+            pctEl.textContent = `${pct}%`;
+        }
+    });
+}
+
+// ---- Init ----
+updateNav();
+updateQuestMap();
+updateDashboard();

@@ -1,0 +1,113 @@
+/* XP Popup */
+.xp-popup {
+    position: fixed;
+    top: 70px;
+    right: 2rem;
+    background: var(--accent-xp);
+    color: #000;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-20px);
+    pointer-events: none;
+}
+
+.xp-popup.animate {
+    animation: xpSlide 1.8s ease forwards;
+}
+
+@keyframes xpSlide {
+    0% { opacity: 0; transform: translateY(-20px); }
+    15% { opacity: 1; transform: translateY(0); }
+    75% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-40px) scale(1.1); }
+}
+
+/* Badge Unlock Overlay */
+.badge-unlock-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: overlayFadeIn 0.3s ease;
+}
+
+@keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.badge-unlock-card {
+    background: var(--bg-secondary);
+    border: 2px solid var(--accent-xp);
+    padding: 2.5rem 3rem;
+    border-radius: 16px;
+    text-align: center;
+    animation: cardScaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-width: 360px;
+}
+
+@keyframes cardScaleIn {
+    from { transform: scale(0.6); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.badge-unlock-card .badge-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.badge-unlock-card h2 {
+    color: var(--accent-xp);
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.badge-unlock-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.badge-unlock-card p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.badge-unlock-card button {
+    background: var(--accent-xp);
+    color: #000;
+    border: none;
+    padding: 0.6rem 2rem;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+/* Level Up Animation */
+.level-up-flash {
+    animation: levelFlash 0.6s ease;
+}
+
+@keyframes levelFlash {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); color: var(--accent-xp); }
+    100% { transform: scale(1); }
+}
+
+/* Lesson completion pulse */
+.completion-pulse {
+    animation: pulse 0.5s ease;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}

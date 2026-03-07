@@ -1,0 +1,168 @@
+/* Lesson Tabs */
+.lesson-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--bg-tertiary);
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+}
+
+.tab-btn {
+    padding: 0.75rem 1.25rem;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.tab-btn.active {
+    color: var(--accent-go);
+    border-bottom-color: var(--accent-go);
+}
+
+.tab-btn.completed {
+    color: var(--accent-success);
+}
+
+.tab-btn.completed::after {
+    content: ' \2713';
+}
+
+.tab-btn.locked {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.tab-btn.locked::before {
+    content: '\1F512 ';
+    font-size: 0.7rem;
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Compare Split View */
+.compare-split,
+.practice-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.compare-pane,
+.ref-pane,
+.editor-pane {
+    min-width: 0;
+}
+
+.pane-label {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.node-label {
+    background: var(--accent-node);
+    color: #fff;
+}
+
+.go-label {
+    background: var(--accent-go);
+    color: #fff;
+}
+
+/* Editor Controls */
+.editor-controls {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+/* CodeMirror Overrides */
+.CodeMirror {
+    height: auto;
+    min-height: 200px;
+    max-height: 500px;
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+}
+
+.CodeMirror-scroll {
+    min-height: 200px;
+}
+
+/* Learn Content */
+.learn-content h2 {
+    font-size: 1.2rem;
+    color: var(--accent-node);
+    margin-bottom: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .compare-split,
+    .practice-split {
+        grid-template-columns: 1fr;
+    }
+
+    .lesson-tabs {
+        flex-wrap: nowrap;
+    }
+
+    .tab-btn {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .lesson-title-row h1 {
+        font-size: 1.3rem;
+    }
+}
+
+/* No content message for empty challenge/test tabs */
+.no-content-msg {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-secondary);
+}
+
+.no-content-msg h2 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+}
+
+.no-content-msg p {
+    font-size: 1rem;
+    opacity: 0.8;
+}
