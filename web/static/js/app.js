@@ -1,10 +1,17 @@
 import { Progress } from './modules/progress.js';
 import { Gamification, BADGES } from './modules/gamification.js';
+import { GameState } from './modules/gameState.js';
+import { Inventory } from './modules/inventory.js';
 
 const progress = new Progress();
 const gamification = new Gamification(progress);
+const gameState = new GameState(progress);
+const inventory = new Inventory(gameState);
 
-// ---- Update Navigation XP/Level ----
+// ---- Track login streak ----
+gameState.trackLogin();
+
+// ---- Update Navigation HUD ----
 function updateNav() {
     const state = progress.getState();
     const levelEl = document.getElementById('nav-level');
@@ -14,7 +21,35 @@ function updateNav() {
     if (xpEl) xpEl.textContent = `${state.totalXP} XP`;
     if (fillEl) fillEl.style.width = `${gamification.percentToNextLevel(state.totalXP)}%`;
     const coinsEl = document.getElementById('nav-coins');
-    if (coinsEl) coinsEl.textContent = `${state.totalCoins || 0} coins`;
+    if (coinsEl) coinsEl.textContent = `${state.totalCoins || 0}`;
+
+    // Update energy pips
+    updateEnergyPips();
+
+    // Update teacher avatar stage
+    updateTeacherAvatar();
+}
+
+function updateEnergyPips() {
+    const energy = gameState.getEnergy();
+    const pips = document.querySelectorAll('#hud-energy .energy-pip');
+    pips.forEach((pip, i) => {
+        if (i < energy.current) {
+            pip.classList.add('filled');
+        } else {
+            pip.classList.remove('filled');
+        }
+    });
+}
+
+function updateTeacherAvatar() {
+    const stage = gameState.getTeacherStage();
+    const el = document.getElementById('hud-teacher-avatar');
+    if (!el) return;
+    el.classList.remove('stage-robot', 'stage-holographic', 'stage-deity');
+    el.classList.add(`stage-${stage}`);
+    const icons = { robot: '\uD83E\uDD16', holographic: '\uD83E\uDDDE', deity: '\u2728' };
+    el.textContent = icons[stage] || '\uD83E\uDD16';
 }
 
 // ---- Quest Map: Phase Lock/Unlock ----
@@ -105,11 +140,9 @@ function updateDashboard() {
     // Phase progress rows
     document.querySelectorAll('.phase-progress-row').forEach(row => {
         const phase = row.dataset.phase;
-        // For now, show basic progress
         const fill = row.querySelector('.progress-fill');
         const pctEl = row.querySelector('.progress-pct');
         if (fill && pctEl) {
-            // Approximate based on total lessons per phase
             const completedCount = progress.countCompleted();
             const pct = Math.min(100, Math.round((completedCount / 64) * 100));
             fill.style.width = `${pct}%`;
@@ -118,7 +151,13 @@ function updateDashboard() {
     });
 }
 
+// ---- Render Inventory Bar ----
+function renderInventory() {
+    inventory.renderBar('inventory-bar');
+}
+
 // ---- Init ----
 updateNav();
 updateQuestMap();
 updateDashboard();
+renderInventory();

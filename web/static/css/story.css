@@ -1,0 +1,153 @@
+/* Story Quest Page */
+
+.story-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.story-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.story-header h1 {
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.story-subtitle {
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+/* Chapter cards */
+.story-chapters {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.chapter-card {
+    background: var(--bg-secondary);
+    border: 2px solid var(--bg-tertiary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    transition: border-color 0.3s, transform 0.2s;
+    cursor: pointer;
+}
+
+.chapter-card:hover {
+    transform: translateX(4px);
+    border-color: #8b5cf6;
+}
+
+.chapter-card.locked {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.chapter-card.completed {
+    border-color: var(--accent-success);
+}
+
+.chapter-card.active {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+}
+
+.chapter-number {
+    width: 48px;
+    height: 48px;
+    background: var(--bg-tertiary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.chapter-card.completed .chapter-number {
+    background: var(--accent-success);
+    color: #fff;
+}
+
+.chapter-card.active .chapter-number {
+    background: #8b5cf6;
+    color: #fff;
+}
+
+.chapter-info {
+    flex: 1;
+}
+
+.chapter-info h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.chapter-info p {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.chapter-phase {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+}
+
+.chapter-reward {
+    font-size: 0.8rem;
+    color: var(--accent-xp);
+    white-space: nowrap;
+}
+
+/* Narrative viewer */
+.story-narrative {
+    background: var(--bg-secondary);
+    border: 2px solid #8b5cf6;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.narrative-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-primary);
+    min-height: 100px;
+    margin-bottom: 1.5rem;
+}
+
+/* Typewriter animation */
+.typewriter {
+    overflow: hidden;
+    white-space: pre-wrap;
+    border-right: 2px solid var(--accent-go);
+    animation: blink-cursor 0.75s step-end infinite;
+}
+
+@keyframes blink-cursor {
+    from, to { border-color: transparent; }
+    50% { border-color: var(--accent-go); }
+}
+
+@media (max-width: 768px) {
+    .chapter-card {
+        flex-direction: column;
+        text-align: center;
+    }
+}

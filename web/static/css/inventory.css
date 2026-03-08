@@ -1,0 +1,132 @@
+/* Inventory Bar — fixed at bottom */
+
+.inventory-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 52px;
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    border-top: 1px solid var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 1rem;
+    z-index: 100;
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Individual inventory slot */
+.inv-slot {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: default;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    min-width: 56px;
+    justify-content: center;
+}
+
+.inv-slot:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.inv-slot.rarity-common { border-color: #64748b; }
+.inv-slot.rarity-uncommon { border-color: #8b5cf6; }
+.inv-slot.rarity-rare { border-color: #f59e0b; }
+
+.inv-slot.rarity-common:hover { border-color: #94a3b8; }
+.inv-slot.rarity-uncommon:hover { border-color: #a78bfa; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2); }
+.inv-slot.rarity-rare:hover { border-color: #fbbf24; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2); }
+
+.inv-icon {
+    font-size: 1.2rem;
+}
+
+.inv-qty {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    min-width: 14px;
+    text-align: center;
+}
+
+.inv-empty {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+/* Item drop popup */
+.item-drop-popup {
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg-secondary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 200;
+    opacity: 0;
+    transition: transform 0.4s ease, opacity 0.4s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+
+.item-drop-popup.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.item-drop-popup.fade-out {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+}
+
+.item-drop-icon {
+    font-size: 1.5rem;
+}
+
+.item-drop-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.item-drop-qty {
+    font-size: 0.8rem;
+    color: var(--accent-success);
+    font-weight: 700;
+}
+
+/* Ensure page content has space for inventory bar */
+body {
+    padding-bottom: 56px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .inventory-bar {
+        height: 44px;
+        gap: 4px;
+    }
+
+    .inv-slot {
+        padding: 3px 6px;
+        min-width: 44px;
+    }
+
+    .inv-icon { font-size: 1rem; }
+    .inv-qty { font-size: 0.7rem; }
+
+    body { padding-bottom: 48px; }
+}

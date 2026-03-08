@@ -1,0 +1,59 @@
+{{define "empire.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empire - GoQuest</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/animations.css">
+    <link rel="stylesheet" href="/static/css/game-hud.css">
+    <link rel="stylesheet" href="/static/css/inventory.css">
+    <link rel="stylesheet" href="/static/css/empire.css">
+</head>
+<body>
+    {{template "nav" .}}
+
+    <div id="xp-popup" class="xp-popup hidden"></div>
+
+    <main class="empire-page">
+        <div class="empire-header">
+            <h1>Your Code Empire</h1>
+            <p class="empire-subtitle">Build, upgrade, and automate your coding kingdom</p>
+        </div>
+
+        <div class="empire-resources" id="empire-resources">
+            <div class="resource-display">
+                <span class="resource-icon">&#x1FAA8;</span>
+                <span class="resource-name">Stone</span>
+                <span class="resource-count" id="res-stone">0</span>
+            </div>
+            <div class="resource-display">
+                <span class="resource-icon">&#x1F50C;</span>
+                <span class="resource-name">Circuits</span>
+                <span class="resource-count" id="res-circuits">0</span>
+            </div>
+            <div class="resource-display">
+                <span class="resource-icon">&#x1F48E;</span>
+                <span class="resource-name">Data Gems</span>
+                <span class="resource-count" id="res-datagems">0</span>
+            </div>
+        </div>
+
+        <div class="empire-grid" id="empire-grid">
+            <!-- Buildings rendered by JS -->
+        </div>
+
+        <div class="empire-passive" id="empire-passive">
+            <!-- Passive rewards info rendered by JS -->
+        </div>
+    </main>
+
+    <div class="inventory-bar" id="inventory-bar"></div>
+
+    <script type="module" src="/static/js/app.js"></script>
+    <script type="module" src="/static/js/modules/empireView.js"></script>
+</body>
+</html>
+{{end}}

@@ -1,19 +1,36 @@
 {{define "nav"}}
-<nav class="main-nav">
+<nav class="main-nav game-hud">
     <a href="/" class="nav-logo">
         <span class="logo-icon">&#9881;</span>
         <span>GoQuest</span>
     </a>
-    <div class="nav-progress">
-        <span id="nav-level" class="level-badge">Lvl 1</span>
-        <div class="xp-bar-mini">
-            <div id="nav-xp-fill" class="xp-bar-fill" style="width: 0%"></div>
+    <div class="hud-stats">
+        <div class="hud-energy" id="hud-energy">
+            <span class="hud-energy-label">EN</span>
+            <div class="energy-pip filled"></div>
+            <div class="energy-pip filled"></div>
+            <div class="energy-pip filled"></div>
+            <div class="energy-pip filled"></div>
+            <div class="energy-pip filled"></div>
         </div>
-        <span id="nav-xp" class="xp-count">0 XP</span>
-        <span id="nav-coins" class="coin-count">0 coins</span>
+        <span id="nav-level" class="hud-level">Lvl 1</span>
+        <div class="hud-xp-bar">
+            <div class="xp-bar-mini">
+                <div id="nav-xp-fill" class="xp-bar-fill" style="width: 0%"></div>
+            </div>
+            <span id="nav-xp" class="xp-text">0 XP</span>
+        </div>
+        <div class="hud-coins">
+            <span class="coin-icon">&#x1F4B0;</span>
+            <span id="nav-coins">0</span>
+        </div>
     </div>
+    <div id="hud-teacher-avatar" class="hud-teacher stage-robot" title="Your AI Teacher">&#x1F916;</div>
     <div class="nav-links">
         <a href="/">Quest Map</a>
+        <a href="/empire">Empire</a>
+        <a href="/challenges">Challenges</a>
+        <a href="/story">Story</a>
         <a href="/dashboard">Dashboard</a>
     </div>
 </nav>

@@ -17,6 +17,10 @@ func New(curriculum *content.Curriculum) http.Handler {
 	mux.HandleFunc("GET /{$}", pages.Home)
 	mux.HandleFunc("GET /lesson/{slug}", pages.Lesson)
 	mux.HandleFunc("GET /dashboard", pages.Dashboard)
+	mux.HandleFunc("GET /empire", pages.Empire)
+	mux.HandleFunc("GET /challenges", pages.Challenges)
+	mux.HandleFunc("GET /challenges/{mode}", pages.ChallengeMode)
+	mux.HandleFunc("GET /story", pages.Story)
 
 	// JSON API
 	mux.HandleFunc("GET /api/lessons", api.ListLessons)

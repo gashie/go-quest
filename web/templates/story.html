@@ -1,0 +1,41 @@
+{{define "story.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Quest - GoQuest</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/animations.css">
+    <link rel="stylesheet" href="/static/css/game-hud.css">
+    <link rel="stylesheet" href="/static/css/inventory.css">
+    <link rel="stylesheet" href="/static/css/story.css">
+</head>
+<body>
+    {{template "nav" .}}
+
+    <div id="xp-popup" class="xp-popup hidden"></div>
+
+    <main class="story-page">
+        <div class="story-header">
+            <h1>The Code Realm</h1>
+            <p class="story-subtitle">Ancient Go systems are failing. Only you can repair them.</p>
+        </div>
+
+        <div class="story-chapters" id="story-chapters">
+            <!-- Chapters rendered by JS -->
+        </div>
+
+        <div class="story-narrative hidden" id="story-narrative">
+            <div class="narrative-text" id="narrative-text"></div>
+            <button class="btn-primary" id="btn-narrative-next">Continue</button>
+        </div>
+    </main>
+
+    <div class="inventory-bar" id="inventory-bar"></div>
+
+    <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
+{{end}}

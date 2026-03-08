@@ -1,0 +1,73 @@
+{{define "challenges.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Challenges - GoQuest</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/animations.css">
+    <link rel="stylesheet" href="/static/css/game-hud.css">
+    <link rel="stylesheet" href="/static/css/inventory.css">
+    <link rel="stylesheet" href="/static/css/mini-challenges.css">
+</head>
+<body>
+    {{template "nav" .}}
+
+    <div id="xp-popup" class="xp-popup hidden"></div>
+
+    <main class="challenges-page">
+        <div class="challenges-header">
+            <h1>Mini Challenges</h1>
+            <p class="challenges-subtitle">Test your Go skills under pressure. Each challenge costs 1 energy.</p>
+        </div>
+
+        <div class="challenge-modes">
+            <a href="/challenges/bug-hunt" class="mode-card mode-bug-hunt">
+                <div class="mode-icon">&#x1F41B;</div>
+                <h2>Bug Hunt</h2>
+                <p>Find and fix bugs in Go code as fast as you can!</p>
+                <div class="mode-meta">
+                    <span class="mode-time">60s</span>
+                    <span class="mode-energy">1 EN</span>
+                </div>
+                <div class="mode-best-score">
+                    <span>Best: </span><span id="best-bug-hunt">0</span>
+                </div>
+            </a>
+
+            <a href="/challenges/syntax-sprint" class="mode-card mode-syntax-sprint">
+                <div class="mode-icon">&#x26A1;</div>
+                <h2>Syntax Sprint</h2>
+                <p>Type correct Go syntax before time runs out!</p>
+                <div class="mode-meta">
+                    <span class="mode-time">45s</span>
+                    <span class="mode-energy">1 EN</span>
+                </div>
+                <div class="mode-best-score">
+                    <span>Best: </span><span id="best-syntax-sprint">0</span>
+                </div>
+            </a>
+
+            <a href="/challenges/function-frenzy" class="mode-card mode-function-frenzy">
+                <div class="mode-icon">&#x1F3AF;</div>
+                <h2>Function Frenzy</h2>
+                <p>Build Go functions under time pressure!</p>
+                <div class="mode-meta">
+                    <span class="mode-time">90s</span>
+                    <span class="mode-energy">1 EN</span>
+                </div>
+                <div class="mode-best-score">
+                    <span>Best: </span><span id="best-function-frenzy">0</span>
+                </div>
+            </a>
+        </div>
+    </main>
+
+    <div class="inventory-bar" id="inventory-bar"></div>
+
+    <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
+{{end}}

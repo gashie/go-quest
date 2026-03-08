@@ -9,155 +9,401 @@
     <link rel="stylesheet" href="/static/css/components.css">
     <link rel="stylesheet" href="/static/css/lesson.css">
     <link rel="stylesheet" href="/static/css/animations.css">
-    <!-- Prism.js for syntax highlighting -->
+    <link rel="stylesheet" href="/static/css/game-hud.css">
+    <link rel="stylesheet" href="/static/css/inventory.css">
+    <link rel="stylesheet" href="/static/css/game-layout.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-    <!-- CodeMirror -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 </head>
-<body>
+<body class="game-mode">
     {{template "nav" .}}
 
     <div id="xp-popup" class="xp-popup hidden"></div>
 
-    <main class="lesson-container" data-slug="{{.Lesson.Slug}}" data-phase="{{.Phase.Slug}}">
-        <div class="lesson-header">
-            <div class="lesson-nav-top">
-                <a href="/" class="back-link">&larr; Quest Map</a>
-                <div class="lesson-nav-arrows">
-                    {{if .Lesson.PrevSlug}}<a href="/lesson/{{.Lesson.PrevSlug}}" class="nav-arrow">&larr; Prev</a>{{end}}
-                    {{if .Lesson.NextSlug}}<a href="/lesson/{{.Lesson.NextSlug}}" class="nav-arrow">Next &rarr;</a>{{end}}
+    <!-- ===== LESSON INTRO OVERLAY ===== -->
+    <div class="lesson-intro-overlay" id="lesson-intro">
+        <div class="lesson-intro-card">
+            <div class="intro-lesson-number">Lesson {{.Lesson.Number}}</div>
+            <h1 class="intro-lesson-title">{{.Lesson.Title}}</h1>
+            <p class="intro-description" id="intro-description">Master this concept by completing all 5 steps: learn, compare, practice, challenge, and test.</p>
+            <div class="intro-rewards">
+                <div class="intro-reward-item xp">&#x2728; +{{.Lesson.XPReward}} XP</div>
+                <div class="intro-reward-item coins">&#x1FA99; +{{.Lesson.CoinReward}} Coins</div>
+            </div>
+            <div class="intro-buttons">
+                <button class="btn-game btn-game-run" id="btn-intro-ready">&#x2694;&#xFE0F; I'm Ready!</button>
+                <button class="btn-game btn-game-reset" id="btn-intro-skip">Skip Intro</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MAIN GAME LAYOUT ===== -->
+    <main class="game-layout" data-slug="{{.Lesson.Slug}}" data-phase="{{.Phase.Slug}}">
+
+        <!-- ======== TOP LEFT: Tutorial Panel (Learn + Compare) ======== -->
+        <div class="tutorial-panel">
+            <div class="panel-titlebar">
+                <div class="panel-titlebar-left">
+                    <span>&#x1F4D6;</span> Tutorial
+                </div>
+                <div class="editor-mini-hud">
+                    <a href="/" class="mini-hud-home">&#x2190; Quest Map</a>
+                    <span class="mini-hud-item mini-hud-level"><span class="hud-icon">&#x2694;&#xFE0F;</span> <span id="mini-level">Lvl 1</span></span>
+                    <span class="mini-hud-item mini-hud-xp"><span class="hud-icon">&#x2728;</span> <span id="mini-xp">0</span> XP</span>
+                    <span class="mini-hud-item mini-hud-coins"><span class="hud-icon">&#x1FA99;</span> <span id="mini-coins">0</span></span>
                 </div>
             </div>
-            <div class="lesson-title-row">
-                <span class="lesson-number-lg">{{.Lesson.Number}}</span>
-                <h1>{{.Lesson.Title}}</h1>
-                <div class="lesson-rewards-row">
-                    <span class="lesson-xp-badge">+{{.Lesson.XPReward}} XP</span>
-                    <span class="lesson-coin-badge">+{{.Lesson.CoinReward}} coins</span>
+
+            <div class="panel-tab-bar" id="tutorial-tab-bar">
+                <button class="panel-tab active" data-tab="learn" data-step="0">1. Learn</button>
+                <button class="panel-tab locked" data-tab="compare" data-step="1">2. Compare</button>
+            </div>
+
+            <div class="panel-content">
+                <!-- Tab 1: GUIDED LEARN -->
+                <div class="tab-panel active" id="tab-learn">
+                    <div class="learn-panel-content">
+                        <div class="learn-pages" id="learn-pages">
+                            {{if .Lesson.NodeCode}}
+                            <div class="learn-page active" data-page="0">
+                                <h2 style="color: var(--accent-node);">&#x1F4D7; How it works in Node.js</h2>
+                                <p style="color: var(--text-secondary); margin-bottom: 10px;">This is how you'd do it in JavaScript/Node.js:</p>
+                                <pre><code class="language-javascript">{{.Lesson.NodeCode}}</code></pre>
+                            </div>
+                            {{end}}
+                            <div class="learn-page" data-page="1" id="learn-go-page">
+                                <h2 style="color: var(--accent-go);">&#x1F4D8; Now in Go</h2>
+                                <div id="learn-explanation"></div>
+                            </div>
+                        </div>
+                        <div class="learn-page-indicator" id="learn-dots"></div>
+                    </div>
+                    <div class="panel-buttons">
+                        <button class="btn-game btn-game-submit" id="btn-learn-prev" style="display:none;">&#x25C0; Back</button>
+                        <button class="btn-game btn-game-run" id="btn-learn-next">Continue &#x25B6;</button>
+                        <button class="btn-game btn-game-run btn-next-tab" data-next="compare" id="btn-learn-done" style="display:none;">Compare Code &#x25B6;</button>
+                    </div>
+                </div>
+
+                <!-- Tab 2: COMPARE -->
+                <div class="tab-panel" id="tab-compare">
+                    <div class="compare-step-label" id="compare-step-label">
+                        <span class="compare-step-num" id="compare-step-num">1</span>
+                        <span id="compare-step-text">Here's the Node.js version you already know</span>
+                    </div>
+                    <div class="compare-panel-grid single-mode" id="compare-grid">
+                        <div class="compare-code-pane" id="compare-node-pane">
+                            <span class="pane-label node-label">Node.js</span>
+                            <pre><code class="language-javascript">{{.Lesson.NodeCode}}</code></pre>
+                        </div>
+                        <div class="compare-code-pane hidden-pane" id="compare-go-pane">
+                            <span class="pane-label go-label">Go</span>
+                            <pre><code class="language-go">{{.Lesson.GoCode}}</code></pre>
+                        </div>
+                    </div>
+                    <div id="annotations" style="padding: 8px; flex-shrink: 0; overflow: auto; max-height: 80px;"></div>
+                    <div class="panel-buttons">
+                        <button class="btn-game btn-game-submit" id="btn-compare-prev" style="display:none;">&#x25C0; Back</button>
+                        <button class="btn-game btn-game-run" id="btn-compare-next">Show Go Version &#x25B6;</button>
+                        <button class="btn-game btn-game-run btn-next-tab" data-next="practice" id="btn-compare-done" style="display:none;">Write Go Code &#x25B6;</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="lesson-tabs">
-            <button class="tab-btn active" data-tab="learn" data-step="0">1. Learn</button>
-            <button class="tab-btn locked" data-tab="compare" data-step="1">2. Compare</button>
-            <button class="tab-btn locked" data-tab="practice" data-step="2">3. Practice</button>
-            <button class="tab-btn locked" data-tab="challenge" data-step="3">4. Challenge</button>
-            <button class="tab-btn locked" data-tab="test" data-step="4">5. Test</button>
-        </div>
-
-        <!-- Tab 1: Learn -->
-        <div class="tab-panel active" id="tab-learn">
-            <div class="learn-content">
-                {{if .Lesson.NodeCode}}
-                <h2>How it works in Node.js</h2>
-                <pre><code class="language-javascript">{{.Lesson.NodeCode}}</code></pre>
-                {{end}}
-                <div class="explanation" id="learn-explanation"></div>
-
-                <!-- Teacher Tips -->
-                <div class="teacher-tips" id="teacher-tips"></div>
-            </div>
-            <button class="btn-next-tab btn-unlock-next" data-next="compare">Got it! Show me the Go version &rarr;</button>
-        </div>
-
-        <!-- Tab 2: Compare -->
-        <div class="tab-panel" id="tab-compare">
-            <div class="compare-split">
-                <div class="compare-pane">
-                    <h3 class="pane-label node-label">Node.js</h3>
-                    <pre><code class="language-javascript">{{.Lesson.NodeCode}}</code></pre>
+        <!-- ======== TOP RIGHT: Code Editor Panel (Practice + Challenge + Test) ======== -->
+        <div class="editor-panel">
+            <div class="panel-titlebar">
+                <div class="panel-titlebar-left">
+                    <span>&#x1F4BB;</span> Code Editor
                 </div>
-                <div class="compare-pane">
-                    <h3 class="pane-label go-label">Go</h3>
-                    <pre><code class="language-go">{{.Lesson.GoCode}}</code></pre>
+                <div class="panel-titlebar-right">
+                    <span class="editor-status" id="editor-status">Ready</span>
                 </div>
             </div>
-            <div class="annotations" id="annotations"></div>
-            <button class="btn-next-tab btn-unlock-next" data-next="practice">Ready to write Go &rarr;</button>
-        </div>
 
-        <!-- Tab 3: Practice -->
-        <div class="tab-panel" id="tab-practice">
-            <h2>Try it yourself</h2>
-            <p>Write the Go equivalent. The Node.js code is shown for reference.</p>
-            <div class="practice-split">
-                <div class="ref-pane">
-                    <h3 class="pane-label node-label">Reference (Node.js)</h3>
-                    <pre><code class="language-javascript">{{.Lesson.NodeCode}}</code></pre>
+            <div class="panel-tab-bar" id="editor-tab-bar">
+                <button class="panel-tab locked" data-tab="practice" data-step="2">3. Practice</button>
+                <button class="panel-tab locked" data-tab="challenge" data-step="3">4. Challenge</button>
+                <button class="panel-tab locked" data-tab="test" data-step="4">5. Test</button>
+            </div>
+
+            <div class="panel-content">
+                <!-- Tab 3: Practice -->
+                <div class="tab-panel" id="tab-practice">
+                    <div class="tab-instructions" id="practice-instructions">
+                        <h4>&#x270D;&#xFE0F; Practice: Try It Yourself</h4>
+                        <p id="practice-guide">The code editor below contains the Go version of <strong>{{.Lesson.Title}}</strong>. Your goal is to understand how it works by running and modifying it.</p>
+                        <div class="instruction-steps">
+                            <span class="step-num"><strong>1</strong> Read the code</span>
+                            <span class="step-num"><strong>2</strong> Click Run Code</span>
+                            <span class="step-num"><strong>3</strong> Modify &amp; re-run</span>
+                            <span class="step-num"><strong>4</strong> Move to Challenge</span>
+                        </div>
+                    </div>
+                    <div class="editor-area">
+                        <div id="practice-editor"></div>
+                    </div>
+                    <div class="panel-buttons">
+                        <button id="btn-run" class="btn-game btn-game-run">&#x25B6; Run</button>
+                        <button id="btn-reset" class="btn-game btn-game-reset">&#x21BA; Reset</button>
+                        <button id="btn-solution" class="btn-game btn-game-solution">&#x1F440; Solution</button>
+                        <button class="btn-game btn-game-submit btn-next-tab" data-next="challenge">Challenge &#x25B6;</button>
+                    </div>
                 </div>
-                <div class="editor-pane">
-                    <h3 class="pane-label go-label">Your Go Code</h3>
-                    <div id="practice-editor"></div>
+
+                <!-- Tab 4: Challenge -->
+                <div class="tab-panel" id="tab-challenge">
+                    <div class="tab-instructions" id="challenge-instructions">
+                        <h4>&#x1F3AF; Challenge: Apply What You Learned</h4>
+                        <p id="challenge-guide">Now prove your understanding! Read the challenge prompt below, then modify the code to solve it.</p>
+                        <div class="instruction-steps">
+                            <span class="step-num"><strong>1</strong> Read the prompt</span>
+                            <span class="step-num"><strong>2</strong> Edit the code</span>
+                            <span class="step-num"><strong>3</strong> Click Submit</span>
+                        </div>
+                    </div>
+                    <div class="challenge-prompt" id="challenge-prompt" style="padding: 6px 10px; background: var(--panel-inner-bg); border-radius: 4px; margin: 0 8px 4px; font-size: 0.65rem; border-left: 3px solid var(--accent-go);"></div>
+                    <div class="editor-area">
+                        <div id="challenge-editor"></div>
+                    </div>
+                    <div class="panel-buttons">
+                        <button id="btn-challenge-run" class="btn-game btn-game-run">&#x25B6; Submit</button>
+                        <button id="btn-challenge-reset" class="btn-game btn-game-reset">&#x21BA; Reset</button>
+                        <button id="btn-to-test" class="btn-game btn-game-submit hidden btn-next-tab" data-next="test">Tests &#x25B6;</button>
+                    </div>
+                    <div id="challenge-result" class="hidden" style="padding: 6px 8px; font-size: 0.65rem;"></div>
+                </div>
+
+                <!-- Tab 5: Test -->
+                <div class="tab-panel" id="tab-test">
+                    <div class="tab-instructions" id="test-instructions">
+                        <h4>&#x1F9EA; Test: Prove Your Mastery</h4>
+                        <p id="test-guide">Final step! The automated tests below will verify your solution works correctly. Click <strong>Run Tests</strong> to check.</p>
+                        <div class="instruction-steps">
+                            <span class="step-num"><strong>1</strong> Review test code</span>
+                            <span class="step-num"><strong>2</strong> Click Run Tests</span>
+                            <span class="step-num"><strong>3</strong> All green = pass!</span>
+                        </div>
+                    </div>
+                    <div class="editor-area" id="test-editor-area">
+                        <div id="test-editor"></div>
+                        <div id="test-fallback" class="test-fallback" style="display:none;">
+                            <div class="test-fallback-content">
+                                <div style="font-size: 1.5rem; margin-bottom: 8px;">&#x1F9EA;</div>
+                                <h4 style="color: var(--accent-go); margin-bottom: 4px; font-size: 0.72rem;">Automated Test</h4>
+                                <p style="color: var(--text-secondary); font-size: 0.65rem; line-height: 1.5;">This test will run your code from the Challenge tab and verify the output matches the expected result. Click <strong>Run Tests</strong> below.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-buttons">
+                        <button id="btn-run-tests" class="btn-game btn-game-run">&#x25B6; Run Tests</button>
+                    </div>
+                    <div id="test-results" class="test-results" style="padding: 6px 8px; font-size: 0.65rem;"></div>
+                </div>
+
+                <!-- Placeholder when no editor tab active yet -->
+                <div class="tab-panel editor-placeholder active" id="tab-editor-placeholder">
+                    <div class="placeholder-content">
+                        <div class="placeholder-icon">&#x1F4BB;</div>
+                        <h3>Code Editor</h3>
+                        <p>Complete the Learn and Compare steps first, then you'll write Go code here!</p>
+                        <div class="placeholder-steps">
+                            <span class="step-badge" id="ph-learn">1. Learn</span>
+                            <span class="step-arrow">&#x2192;</span>
+                            <span class="step-badge" id="ph-compare">2. Compare</span>
+                            <span class="step-arrow">&#x2192;</span>
+                            <span class="step-badge active" id="ph-practice">3. Practice</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="editor-controls">
-                <button id="btn-run" class="btn-primary">&#9654; Run Code</button>
-                <button id="btn-reset" class="btn-secondary">Reset</button>
-                <button id="btn-solution" class="btn-ghost">Show Solution</button>
-            </div>
-            <div id="practice-output" class="output-panel hidden">
-                <h4>Output</h4>
-                <pre id="output-text"></pre>
-            </div>
-            <button class="btn-next-tab btn-unlock-next" data-next="challenge">Try the Challenge &rarr;</button>
         </div>
 
-        <!-- Tab 4: Challenge -->
-        <div class="tab-panel" id="tab-challenge">
-            <div class="challenge-header">
-                <h2>Challenge</h2>
-                <span class="bonus-xp" id="bonus-xp-display"></span>
-            </div>
-            <div class="challenge-prompt" id="challenge-prompt"></div>
-            <div id="challenge-editor"></div>
-            <div class="editor-controls">
-                <button id="btn-challenge-run" class="btn-primary">&#9654; Submit</button>
-                <button id="btn-hint" class="btn-secondary">Hint</button>
-                <button id="btn-challenge-reset" class="btn-ghost">Reset</button>
-            </div>
-            <div id="challenge-result" class="output-panel hidden"></div>
-            <button class="btn-next-tab btn-unlock-next hidden" id="btn-to-test" data-next="test">Run the Tests &rarr;</button>
-        </div>
+        <!-- ======== BOTTOM ROW: Mission | Journey | Console | Quest+Inventory ======== -->
+        <div class="bottom-row">
 
-        <!-- Tab 5: Test -->
-        <div class="tab-panel" id="tab-test">
-            <h2>Automated Tests</h2>
-            <p>Your code must pass all tests to complete this lesson.</p>
-            <div id="test-editor"></div>
-            <div class="editor-controls">
-                <button id="btn-run-tests" class="btn-primary">&#9654; Run Tests</button>
-            </div>
-            <div id="test-results" class="test-results"></div>
-        </div>
-
-        <!-- Lesson Complete + Next Lesson -->
-        <div id="lesson-complete" class="lesson-complete hidden">
-            <div class="complete-card">
-                <div class="complete-icon">&#10003;</div>
-                <h2>Lesson Complete!</h2>
-                <div class="complete-rewards">
-                    <span class="reward-xp">+<span id="total-xp-earned">0</span> XP</span>
-                    <span class="reward-coins">+<span id="total-coins-earned">0</span> coins</span>
+            <!-- Mission -->
+            <div class="bottom-mission">
+                <div class="bottom-section-header">
+                    <span>&#x1F4DC;</span> Mission
                 </div>
-                {{if .Lesson.NextSlug}}
-                <a href="/lesson/{{.Lesson.NextSlug}}" class="btn-primary btn-next-lesson">Next Lesson: {{.Lesson.NextSlug}} &rarr;</a>
-                {{else}}
-                <a href="/" class="btn-primary btn-next-lesson">Back to Quest Map</a>
-                {{end}}
+                <div class="bottom-section-body">
+                    <div class="mission-compact">
+                        <h4>{{.Lesson.Title}}</h4>
+                        <p id="mission-text">Complete all 5 tabs to master this lesson.</p>
+                        <div class="mission-rewards">
+                            <span class="reward-tag xp">&#x2728; +{{.Lesson.XPReward}} XP</span>
+                            <span class="reward-tag coins">&#x1FA99; +{{.Lesson.CoinReward}} Coins</span>
+                            <span class="reward-tag item">&#x1F381; Item</span>
+                        </div>
+                        <div class="mission-tips" id="teacher-tips"></div>
+                        <button id="btn-hint" class="btn-game btn-game-hint btn-game-sm" style="width:100%; margin-top:6px;">&#x1F4A1; Hint</button>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        {{if not .Lesson.Playable}}
-        <div class="view-only-banner">
-            This lesson requires system resources not available in the browser.
-            Study the code comparison and complete the quiz-style challenge.
+            <!-- Journey World Preview -->
+            <div class="bottom-journey">
+                <div class="bottom-section-header">
+                    <span>&#x1F30D;</span> Journey
+                </div>
+                <div class="journey-world" id="journey-world">
+                    <div class="journey-status" id="journey-status">Begin your quest!</div>
+                    <span class="journey-star" style="top:8%; left:12%;">&#x2B50;</span>
+                    <span class="journey-star" style="top:14%; left:55%; animation-delay:1s;">&#x2B50;</span>
+                    <span class="journey-star" style="top:6%; left:82%; animation-delay:2s;">&#x2B50;</span>
+                    <div class="journey-building" id="building-0"><div class="building-tree">&#x1F332;</div></div>
+                    <div class="journey-building" id="building-1"><div class="building-house"></div></div>
+                    <div class="journey-building" id="building-2"><div class="building-tower"></div></div>
+                    <div class="journey-building" id="building-3"><div class="building-tree">&#x1F333;</div></div>
+                    <div class="journey-building" id="building-4"><div class="building-flag">&#x1F3F0;</div></div>
+                    <div class="journey-path"></div>
+                    <div class="journey-waypoint" id="wp-0"><span class="wp-label">Learn</span></div>
+                    <div class="journey-waypoint" id="wp-1"><span class="wp-label">Compare</span></div>
+                    <div class="journey-waypoint" id="wp-2"><span class="wp-label">Practice</span></div>
+                    <div class="journey-waypoint" id="wp-3"><span class="wp-label">Challenge</span></div>
+                    <div class="journey-waypoint" id="wp-4"><span class="wp-label">Test</span></div>
+                    <div class="journey-character" id="journey-character">
+                        <div class="journey-char-body">
+                            <div class="journey-char-hat"></div>
+                            <div class="journey-char-eyes">
+                                <div class="journey-char-eye"></div>
+                                <div class="journey-char-eye"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="journey-ground"></div>
+                </div>
+            </div>
+
+            <!-- Console -->
+            <div class="console-section" id="console-section">
+                <div class="bottom-section-header">
+                    <span>&#x1F4DF;</span> Console Output
+                    <button class="panel-clear-console" title="Clear">Clear</button>
+                </div>
+                <div class="console-body">
+                    <div class="console-output" id="console-output">
+                        <div class="console-line info"><span class="prompt">$</span> GoQuest Console v1.0</div>
+                        <div class="console-line info"><span class="prompt">$</span> Lesson: {{.Lesson.Title}}</div>
+                        <div class="console-line"><span class="prompt">$</span> Ready. Complete all 5 quests to pass this level.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quest + Inventory -->
+            <div class="bottom-quest-inv">
+                <div class="bottom-section-header">
+                    <span>&#x1F4CB;</span> Quests & Inventory
+                </div>
+                <div class="bottom-section-body quest-inv-body">
+                    <div class="quest-list" id="quest-list">
+                        <div class="quest-item" id="quest-learn">
+                            <div class="quest-checkbox" id="qc-learn"></div>
+                            <span class="quest-text">Read explanation</span>
+                            <span class="quest-progress">1/5</span>
+                        </div>
+                        <div class="quest-item" id="quest-compare">
+                            <div class="quest-checkbox" id="qc-compare"></div>
+                            <span class="quest-text">Compare code</span>
+                            <span class="quest-progress">2/5</span>
+                        </div>
+                        <div class="quest-item" id="quest-practice">
+                            <div class="quest-checkbox" id="qc-practice"></div>
+                            <span class="quest-text">Write Go code</span>
+                            <span class="quest-progress">3/5</span>
+                        </div>
+                        <div class="quest-item" id="quest-challenge">
+                            <div class="quest-checkbox" id="qc-challenge"></div>
+                            <span class="quest-text">Solve challenge</span>
+                            <span class="quest-progress">4/5</span>
+                        </div>
+                        <div class="quest-item" id="quest-test">
+                            <div class="quest-checkbox" id="qc-test"></div>
+                            <span class="quest-text">Pass tests</span>
+                            <span class="quest-progress">5/5</span>
+                        </div>
+                    </div>
+                    <div class="inv-section-label">Inventory</div>
+                    <div class="inv-grid" id="inv-grid"></div>
+                </div>
+            </div>
+
         </div>
-        {{end}}
     </main>
 
-    <!-- Lesson data for JS -->
+    <!-- ===== WIZARD TEACHER ===== -->
+    <div class="wizard-container" id="wizard-container">
+        <div class="wizard-body-wrap">
+            <div class="wizard-hat"></div>
+            <div class="wizard-hat-band"></div>
+            <div class="wizard-face">
+                <div class="wizard-brow left"></div>
+                <div class="wizard-brow right"></div>
+                <div class="wizard-eye left"></div>
+                <div class="wizard-eye right"></div>
+                <div class="wizard-spectacles"></div>
+                <div class="wizard-nose"></div>
+                <div class="wizard-mouth"></div>
+                <div class="wizard-beard"></div>
+            </div>
+            <div class="wizard-robe"></div>
+            <div class="wizard-arm left"></div>
+            <div class="wizard-arm right"></div>
+            <div class="wizard-staff">
+                <div class="wizard-staff-orb"></div>
+                <span class="staff-sparkle">&#x2728;</span>
+                <span class="staff-sparkle">&#x2728;</span>
+                <span class="staff-sparkle">&#x2728;</span>
+            </div>
+        </div>
+        <button class="wizard-sound-toggle" id="wizard-sound-toggle" title="Toggle wizard voice">&#x1F50A; Voice</button>
+        <div class="wizard-speech" id="wizard-speech" style="display:none;">
+            <button class="wizard-speech-close" id="wizard-speech-close">&times;</button>
+            <div id="wizard-speech-text"></div>
+            <button class="wizard-speech-action" id="wizard-speech-action" style="display:none;"></button>
+        </div>
+    </div>
+
+    <!-- Lesson Complete Overlay -->
+    <div id="lesson-complete" class="lesson-complete hidden">
+        <div class="complete-card">
+            <div class="complete-icon" style="font-size:3rem;">&#x1F3C6;</div>
+            <h2 style="background: linear-gradient(135deg, #f59e0b, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Level Complete!</h2>
+            <div class="complete-rewards">
+                <span class="reward-xp">+<span id="total-xp-earned">0</span> XP</span>
+                <span class="reward-coins">+<span id="total-coins-earned">0</span> coins</span>
+            </div>
+            {{if .Lesson.NextSlug}}
+            <a href="/lesson/{{.Lesson.NextSlug}}" class="btn-game btn-game-run" style="margin-top:1rem; padding: 12px 32px; font-size: 1.1rem;">Next Level &#x25B6;</a>
+            {{else}}
+            <a href="/" class="btn-game btn-game-run" style="margin-top:1rem; padding: 12px 32px; font-size: 1.1rem;">Quest Map &#x25B6;</a>
+            {{end}}
+        </div>
+    </div>
+
+    {{if not .Lesson.Playable}}
+    <div class="view-only-banner" style="position:fixed; bottom:44px; left:50%; transform:translateX(-50%); z-index:200; background:var(--accent-warning); color:#1a1a1a; padding:6px 20px; border-radius:4px; font-size:0.8rem;">
+        This lesson requires system resources not available in the browser.
+    </div>
+    {{end}}
+
+    <!-- Bottom Toolbar -->
+    <div class="game-toolbar">
+        <button class="toolbar-btn" title="Code">&#x1F4BB;</button>
+        <button class="toolbar-btn" title="Files">&#x1F4C1;</button>
+        <button class="toolbar-btn" title="Terminal">&#x1F4DF;</button>
+        <div class="toolbar-separator"></div>
+        <span style="font-size:0.75rem; color:var(--text-muted);">Lesson {{.Lesson.Number}}: {{.Lesson.Title}}</span>
+        <div class="toolbar-nav">
+            {{if .Lesson.PrevSlug}}<a href="/lesson/{{.Lesson.PrevSlug}}">&#x25C0; Prev</a>{{end}}
+            <a href="/">Quest Map</a>
+            {{if .Lesson.NextSlug}}<a href="/lesson/{{.Lesson.NextSlug}}">Next &#x25B6;</a>{{end}}
+        </div>
+    </div>
+
     <script id="lesson-data" type="application/json">{{json .Lesson}}</script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>

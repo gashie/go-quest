@@ -1,0 +1,211 @@
+/* Empire Builder Page */
+
+.empire-page {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.empire-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.empire-header h1 {
+    font-size: 2.2rem;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.empire-subtitle {
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+/* Resources bar */
+.empire-resources {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--border-radius);
+}
+
+.resource-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.resource-icon {
+    font-size: 1.3rem;
+}
+
+.resource-name {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.resource-count {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+/* Building grid */
+.empire-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.building-card {
+    background: var(--bg-secondary);
+    border: 2px solid var(--bg-tertiary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: border-color 0.3s, transform 0.2s, box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.building-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.building-card.unlocked {
+    border-color: var(--accent-go);
+}
+
+.building-card.locked {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.building-card.locked::after {
+    content: 'Locked';
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: var(--bg-tertiary);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.building-visual {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.building-icon {
+    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+}
+
+.building-level-indicator {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent-xp);
+}
+
+.building-info h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.building-info p {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.building-production {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--accent-success);
+    padding: 0.5rem;
+    background: rgba(34, 197, 94, 0.1);
+    border-radius: 6px;
+}
+
+.btn-upgrade {
+    margin-top: 1rem;
+    width: 100%;
+    padding: 0.5rem;
+    background: var(--accent-go);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-upgrade:hover {
+    background: #0e7490;
+}
+
+.btn-upgrade:disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.upgrade-cost {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Passive rewards info */
+.empire-passive {
+    background: var(--bg-secondary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    padding: 1rem 1.5rem;
+}
+
+.empire-passive h3 {
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Building level glow effects */
+.building-card.level-1 { border-color: #64748b; }
+.building-card.level-2 { border-color: #22c55e; }
+.building-card.level-3 { border-color: #3b82f6; }
+.building-card.level-4 { border-color: #a855f7; }
+.building-card.level-5 { border-color: #f59e0b; box-shadow: 0 0 16px rgba(245, 158, 11, 0.2); }
+
+@media (max-width: 768px) {
+    .empire-resources {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .empire-grid {
+        grid-template-columns: 1fr;
+    }
+}
