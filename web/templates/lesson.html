@@ -132,21 +132,29 @@
             <div class="panel-content">
                 <!-- Tab 3: Practice -->
                 <div class="tab-panel" id="tab-practice">
-                    <div class="tab-instructions" id="practice-instructions">
-                        <h4>&#x270D;&#xFE0F; Practice: Try It Yourself</h4>
-                        <p id="practice-guide">The code editor below contains the Go version of <strong>{{.Lesson.Title}}</strong>. Your goal is to understand how it works by running and modifying it.</p>
-                        <div class="instruction-steps">
-                            <span class="step-num"><strong>1</strong> Read the code</span>
-                            <span class="step-num"><strong>2</strong> Click Run Code</span>
-                            <span class="step-num"><strong>3</strong> Modify &amp; re-run</span>
-                            <span class="step-num"><strong>4</strong> Move to Challenge</span>
+                    <div class="tab-briefing">
+                        <div class="briefing-header">
+                            <span class="briefing-icon">&#x270D;&#xFE0F;</span>
+                            <div class="briefing-title-row">
+                                <h4>Practice Mode</h4>
+                                <span class="briefing-badge practice-badge">SANDBOX</span>
+                            </div>
+                        </div>
+                        <div class="briefing-body">
+                            <p class="briefing-goal" id="practice-goal">Understand how <strong>{{.Lesson.Title}}</strong> works in Go by running and experimenting with the code.</p>
+                            <div class="briefing-checklist">
+                                <div class="checklist-item" id="pcheck-read"><span class="check-box"></span> Read through the code carefully</div>
+                                <div class="checklist-item" id="pcheck-run"><span class="check-box"></span> Run the code and observe the output</div>
+                                <div class="checklist-item" id="pcheck-modify"><span class="check-box"></span> Change a value or line, then re-run</div>
+                                <div class="checklist-item" id="pcheck-understand"><span class="check-box"></span> Make sure you understand each line</div>
+                            </div>
                         </div>
                     </div>
                     <div class="editor-area">
                         <div id="practice-editor"></div>
                     </div>
                     <div class="panel-buttons">
-                        <button id="btn-run" class="btn-game btn-game-run">&#x25B6; Run</button>
+                        <button id="btn-run" class="btn-game btn-game-run">&#x25B6; Run Code</button>
                         <button id="btn-reset" class="btn-game btn-game-reset">&#x21BA; Reset</button>
                         <button id="btn-solution" class="btn-game btn-game-solution">&#x1F440; Solution</button>
                         <button class="btn-game btn-game-submit btn-next-tab" data-next="challenge">Challenge &#x25B6;</button>
@@ -155,52 +163,76 @@
 
                 <!-- Tab 4: Challenge -->
                 <div class="tab-panel" id="tab-challenge">
-                    <div class="tab-instructions" id="challenge-instructions">
-                        <h4>&#x1F3AF; Challenge: Apply What You Learned</h4>
-                        <p id="challenge-guide">Now prove your understanding! Read the challenge prompt below, then modify the code to solve it.</p>
-                        <div class="instruction-steps">
-                            <span class="step-num"><strong>1</strong> Read the prompt</span>
-                            <span class="step-num"><strong>2</strong> Edit the code</span>
-                            <span class="step-num"><strong>3</strong> Click Submit</span>
+                    <div class="tab-briefing">
+                        <div class="briefing-header">
+                            <span class="briefing-icon">&#x1F3AF;</span>
+                            <div class="briefing-title-row">
+                                <h4>Challenge Mode</h4>
+                                <span class="briefing-badge challenge-badge" id="challenge-type-badge">BUILD</span>
+                            </div>
+                        </div>
+                        <div class="briefing-body">
+                            <div class="challenge-mission-box" id="challenge-prompt">
+                                <div class="mission-label">&#x1F4DC; YOUR MISSION</div>
+                                <p id="challenge-prompt-text">Loading challenge...</p>
+                            </div>
+                            <div class="challenge-expect" id="challenge-expect" style="display:none;">
+                                <div class="expect-label">&#x2705; EXPECTED OUTPUT</div>
+                                <pre id="challenge-expected-output"></pre>
+                            </div>
+                            <div class="challenge-hints-box" id="challenge-hints-box" style="display:none;">
+                                <button class="hint-toggle-btn" id="btn-challenge-hint">&#x1F4A1; Show Hint</button>
+                                <div class="hint-content" id="challenge-hint-content" style="display:none;"></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="challenge-prompt" id="challenge-prompt" style="padding: 6px 10px; background: var(--panel-inner-bg); border-radius: 4px; margin: 0 8px 4px; font-size: 0.65rem; border-left: 3px solid var(--accent-go);"></div>
                     <div class="editor-area">
                         <div id="challenge-editor"></div>
                     </div>
                     <div class="panel-buttons">
                         <button id="btn-challenge-run" class="btn-game btn-game-run">&#x25B6; Submit</button>
                         <button id="btn-challenge-reset" class="btn-game btn-game-reset">&#x21BA; Reset</button>
-                        <button id="btn-to-test" class="btn-game btn-game-submit hidden btn-next-tab" data-next="test">Tests &#x25B6;</button>
+                        <button id="btn-to-test" class="btn-game btn-game-submit hidden btn-next-tab" data-next="test">Final Test &#x25B6;</button>
                     </div>
-                    <div id="challenge-result" class="hidden" style="padding: 6px 8px; font-size: 0.65rem;"></div>
+                    <div id="challenge-result" class="challenge-result-box hidden"></div>
                 </div>
 
                 <!-- Tab 5: Test -->
                 <div class="tab-panel" id="tab-test">
-                    <div class="tab-instructions" id="test-instructions">
-                        <h4>&#x1F9EA; Test: Prove Your Mastery</h4>
-                        <p id="test-guide">Final step! The automated tests below will verify your solution works correctly. Click <strong>Run Tests</strong> to check.</p>
-                        <div class="instruction-steps">
-                            <span class="step-num"><strong>1</strong> Review test code</span>
-                            <span class="step-num"><strong>2</strong> Click Run Tests</span>
-                            <span class="step-num"><strong>3</strong> All green = pass!</span>
+                    <div class="tab-briefing">
+                        <div class="briefing-header">
+                            <span class="briefing-icon">&#x1F9EA;</span>
+                            <div class="briefing-title-row">
+                                <h4>Final Test</h4>
+                                <span class="briefing-badge test-badge">EXAM</span>
+                            </div>
+                        </div>
+                        <div class="briefing-body">
+                            <p class="briefing-goal" id="test-goal">Write the solution from memory. No peeking at other tabs!</p>
+                            <div class="test-rules">
+                                <div class="rule-item"><span class="rule-icon">&#x1F512;</span> Other tabs are locked during the test</div>
+                                <div class="rule-item"><span class="rule-icon">&#x1F6AB;</span> No copy-paste from practice or challenge</div>
+                                <div class="rule-item"><span class="rule-icon">&#x270D;&#xFE0F;</span> Write your code from scratch below</div>
+                                <div class="rule-item"><span class="rule-icon">&#x2705;</span> Your output must match the expected result</div>
+                            </div>
+                            <div class="test-task-box" id="test-task-box">
+                                <div class="mission-label">&#x1F3AF; TASK</div>
+                                <p id="test-task-text">Loading test task...</p>
+                            </div>
+                            <div class="test-expect" id="test-expect" style="display:none;">
+                                <div class="expect-label">&#x2705; EXPECTED OUTPUT</div>
+                                <pre id="test-expected-output"></pre>
+                            </div>
                         </div>
                     </div>
                     <div class="editor-area" id="test-editor-area">
                         <div id="test-editor"></div>
-                        <div id="test-fallback" class="test-fallback" style="display:none;">
-                            <div class="test-fallback-content">
-                                <div style="font-size: 1.5rem; margin-bottom: 8px;">&#x1F9EA;</div>
-                                <h4 style="color: var(--accent-go); margin-bottom: 4px; font-size: 0.72rem;">Automated Test</h4>
-                                <p style="color: var(--text-secondary); font-size: 0.65rem; line-height: 1.5;">This test will run your code from the Challenge tab and verify the output matches the expected result. Click <strong>Run Tests</strong> below.</p>
-                            </div>
-                        </div>
                     </div>
                     <div class="panel-buttons">
-                        <button id="btn-run-tests" class="btn-game btn-game-run">&#x25B6; Run Tests</button>
+                        <button id="btn-run-tests" class="btn-game btn-game-run">&#x25B6; Run Test</button>
+                        <button id="btn-test-reset" class="btn-game btn-game-reset">&#x21BA; Clear</button>
                     </div>
-                    <div id="test-results" class="test-results" style="padding: 6px 8px; font-size: 0.65rem;"></div>
+                    <div id="test-results" class="test-results-box"></div>
                 </div>
 
                 <!-- Placeholder when no editor tab active yet -->

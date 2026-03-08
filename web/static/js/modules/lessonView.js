@@ -496,7 +496,10 @@ function consolePrint(msg, type = '') {
     line.className = 'console-line' + (type ? ' ' + type : '');
     line.innerHTML = `<span class="prompt">$</span> ${msg}`;
     out.appendChild(line);
+    // Auto-scroll: scroll both the output div and its parent container
     out.scrollTop = out.scrollHeight;
+    const consoleBody = out.closest('.console-body');
+    if (consoleBody) consoleBody.scrollTop = consoleBody.scrollHeight;
 }
 
 function initConsole() {
@@ -519,6 +522,20 @@ function handleTabView(tabName) {
 
     const idx = TAB_ORDER.indexOf(tabName);
     if (idx === -1) return;
+
+    // Block switching away from test if test mode is active
+    if (testModeLocked && tabName !== 'test') {
+        consolePrint('Tabs locked during test! Focus on writing your code.', 'warning');
+        return;
+    }
+
+    // Enter test mode when switching to test tab
+    if (tabName === 'test' && !testModeLocked) {
+        enterTestMode();
+        if (window._testEditor) {
+            setTimeout(() => window._testEditor.refresh(), 100);
+        }
+    }
 
     currentStep = idx;
 
@@ -744,9 +761,7 @@ function completeCurrentTab(nextTab) {
         consolePrint(`Completed: ${currentTab}`, 'success');
 
         try {
-            const state = progress.getLessonState(lessonData.slug);
-            state[currentTab + 'Done'] = true;
-            progress.saveLessonState(lessonData.slug, state);
+            progress.completeTab(lessonData.slug, currentTab, 0, 0);
         } catch (e) {
             console.warn('Progress save failed:', e);
         }
@@ -774,6 +789,10 @@ function initTabSystem() {
         btn.addEventListener('click', () => {
             const tab = btn.dataset.tab;
             if (!DEV_MODE && btn.classList.contains('locked')) return;
+            if (btn.classList.contains('test-locked')) {
+                consolePrint('Tab locked during test mode!', 'warning');
+                return;
+            }
             handleTabView(tab);
         });
     });
@@ -802,78 +821,149 @@ function initTabSystem() {
 // ============================================
 // CODE EDITORS & RUNNERS
 // ============================================
+const challenge = lessonData.challenge || {};
+const testCases = lessonData.testCases || [];
+
 function initEditors() {
+    // --- PRACTICE EDITOR ---
     if (document.getElementById('practice-editor') && lessonData.goCode) {
-        // Add helpful comments to practice code
-        let practiceCode = lessonData.goCode;
-        if (!practiceCode.startsWith('//')) {
-            practiceCode = `// PRACTICE: ${lessonData.title || 'Go Code'}\n// Try running this code, then modify it to experiment!\n// Click "Run Code" to see the output in the Console below.\n\n` + practiceCode;
-        }
+        let practiceCode = `// PRACTICE: ${lessonData.title || 'Go Code'}\n// Run this code, then try changing values to see what happens.\n// Click "Run Code" to see the output in the Console below.\n\n` + lessonData.goCode;
         window._practiceEditor = new CodeEditor('practice-editor', {
             mode: 'text/x-go',
             initialValue: practiceCode,
             theme: 'dracula'
         });
 
-        // Update practice guide with lesson-specific info
-        const guide = document.getElementById('practice-guide');
-        if (guide && lessonData.explanation) {
-            guide.innerHTML = `Study the Go code below for <strong>${lessonData.title || 'this concept'}</strong>. Try changing values and re-running to understand how it works.`;
+        const goal = document.getElementById('practice-goal');
+        if (goal) {
+            goal.innerHTML = `Understand how <strong>${lessonData.title}</strong> works in Go by running and experimenting with the code below.`;
         }
     }
 
+    // --- CHALLENGE EDITOR ---
     if (document.getElementById('challenge-editor')) {
-        let challengeCode = lessonData.challengeStart || lessonData.goCode || '// Write your solution here\npackage main\n\nfunc main() {\n}\n';
-        // Add challenge comments
-        if (!challengeCode.startsWith('// CHALLENGE')) {
-            challengeCode = `// CHALLENGE: Solve the task described above\n// Modify this code to match the requirements, then click "Submit"\n\n` + challengeCode;
-        }
+        let challengeCode = challenge.starterCode || lessonData.goCode || 'package main\n\nfunc main() {\n\t// Write your solution here\n}\n';
         window._challengeEditor = new CodeEditor('challenge-editor', {
             mode: 'text/x-go',
             initialValue: challengeCode,
             theme: 'dracula'
         });
-
-        // Update challenge guide
-        const cGuide = document.getElementById('challenge-guide');
-        if (cGuide && lessonData.challengePrompt) {
-            cGuide.innerHTML = `Read the challenge prompt below, then modify the code to solve it. Click <strong>Submit</strong> to check.`;
-        }
     }
 
-    if (document.getElementById('test-editor') && lessonData.testCode) {
+    // --- CHALLENGE BRIEFING ---
+    const promptText = document.getElementById('challenge-prompt-text');
+    if (promptText) {
+        promptText.textContent = challenge.prompt || `Write Go code that demonstrates your understanding of ${lessonData.title || 'this concept'}.`;
+    }
+
+    const typeBadge = document.getElementById('challenge-type-badge');
+    if (typeBadge && challenge.type) {
+        const typeLabels = { fill_blank: 'FILL BLANK', rewrite: 'REWRITE', fix_bug: 'FIX BUG', build: 'BUILD' };
+        typeBadge.textContent = typeLabels[challenge.type] || challenge.type.toUpperCase();
+    }
+
+    // Show expected output if available
+    const expectBox = document.getElementById('challenge-expect');
+    const expectPre = document.getElementById('challenge-expected-output');
+    if (expectBox && expectPre && challenge.expectedOutput) {
+        expectBox.style.display = 'block';
+        expectPre.textContent = challenge.expectedOutput.trim();
+    }
+
+    // Challenge hints
+    const hintsBox = document.getElementById('challenge-hints-box');
+    const hintBtn = document.getElementById('btn-challenge-hint');
+    const hintContent = document.getElementById('challenge-hint-content');
+    if (hintsBox && hintBtn && hintContent && challenge.hints && challenge.hints.length > 0) {
+        hintsBox.style.display = 'block';
+        let hintIdx = 0;
+        hintBtn.addEventListener('click', () => {
+            hintContent.style.display = 'block';
+            hintContent.textContent = challenge.hints[hintIdx % challenge.hints.length];
+            hintIdx++;
+            if (hintIdx < challenge.hints.length) {
+                hintBtn.textContent = '\u{1F4A1} Next Hint';
+            } else {
+                hintBtn.textContent = '\u{1F4A1} Show Hint';
+                hintIdx = 0;
+            }
+        });
+    }
+
+    // --- TEST EDITOR (independent — user writes from scratch) ---
+    if (document.getElementById('test-editor')) {
+        const testStarter = `package main\n\nimport "fmt"\n\n// Write your solution for "${lessonData.title}" from memory!\n// No peeking at other tabs.\n\nfunc main() {\n\t// Your code here\n\tfmt.Println()\n}\n`;
         window._testEditor = new CodeEditor('test-editor', {
             mode: 'text/x-go',
-            initialValue: lessonData.testCode,
+            initialValue: testStarter,
             theme: 'dracula',
-            readOnly: true
+            readOnly: false
         });
-    } else {
-        // Show fallback when no test code
-        const testFallback = document.getElementById('test-fallback');
-        const testEditorDiv = document.getElementById('test-editor');
-        if (testFallback) testFallback.style.display = 'flex';
-        if (testEditorDiv) testEditorDiv.style.display = 'none';
     }
 
-    const promptEl = document.getElementById('challenge-prompt');
-    if (promptEl) {
-        if (lessonData.challengePrompt) {
-            promptEl.textContent = lessonData.challengePrompt;
+    // --- TEST BRIEFING ---
+    const testTask = document.getElementById('test-task-text');
+    if (testTask) {
+        if (challenge.prompt) {
+            testTask.textContent = challenge.prompt;
         } else {
-            promptEl.textContent = `Modify the code to demonstrate your understanding of ${lessonData.title || 'this concept'}. Make changes, then click Submit.`;
+            testTask.textContent = `Write the Go code for "${lessonData.title}" from memory. Your output must match the expected result.`;
         }
     }
 
-    // Update test guide with lesson context
-    const testGuide = document.getElementById('test-guide');
-    if (testGuide) {
-        if (lessonData.testCode) {
-            testGuide.innerHTML = `The test below verifies your <strong>${lessonData.title || 'code'}</strong> solution. Click <strong>Run Tests</strong> — all tests must pass to complete this lesson!`;
-        } else {
-            testGuide.innerHTML = `Click <strong>Run Tests</strong> to verify your <strong>${lessonData.title || 'code'}</strong> runs correctly. Your code from the Challenge tab will be tested.`;
+    const testExpectBox = document.getElementById('test-expect');
+    const testExpectPre = document.getElementById('test-expected-output');
+    if (testExpectBox && testExpectPre) {
+        // Use first test case expected output, or challenge expected output
+        const expectedOut = (testCases.length > 0 && testCases[0].expectedOutput)
+            ? testCases[0].expectedOutput
+            : (challenge.expectedOutput || '');
+        if (expectedOut) {
+            testExpectBox.style.display = 'block';
+            testExpectPre.textContent = expectedOut.trim();
         }
     }
+
+    // Disable paste in test editor
+    const testEditorEl = document.getElementById('test-editor');
+    if (testEditorEl) {
+        testEditorEl.addEventListener('paste', (e) => {
+            e.preventDefault();
+            consolePrint('Paste disabled during test! Write from memory.', 'warning');
+            wizardSay("No pasting allowed! You need to write this from memory.");
+        });
+    }
+}
+
+// Track practice checklist progress
+let practiceRunCount = 0;
+
+function updatePracticeChecklist(step) {
+    const el = document.getElementById(`pcheck-${step}`);
+    if (el && !el.classList.contains('done')) {
+        el.classList.add('done');
+    }
+}
+
+// Lock/unlock tabs during test mode
+let testModeLocked = false;
+
+function enterTestMode() {
+    testModeLocked = true;
+    // Lock all non-test tabs
+    document.querySelectorAll('.panel-tab').forEach(btn => {
+        if (btn.dataset.tab !== 'test') {
+            btn.classList.add('test-locked');
+        }
+    });
+    consolePrint('TEST MODE: Other tabs locked. Write from memory!', 'warning');
+}
+
+function exitTestMode() {
+    testModeLocked = false;
+    document.querySelectorAll('.panel-tab.test-locked').forEach(btn => {
+        btn.classList.remove('test-locked');
+    });
 }
 
 function initRunButtons() {
@@ -885,6 +975,10 @@ function initRunButtons() {
             const code = window._practiceEditor.getValue();
             consolePrint('Running code...', 'info');
             btnRun.disabled = true;
+            updatePracticeChecklist('read');
+            updatePracticeChecklist('run');
+            practiceRunCount++;
+            if (practiceRunCount >= 2) updatePracticeChecklist('modify');
             try {
                 const result = await runner.run(code);
                 if (result.error) {
@@ -893,6 +987,7 @@ function initRunButtons() {
                     wizardSay("Hmm, there's an error. Check the console and try again!");
                 } else {
                     consolePrint(result.output || '(no output)', 'success');
+                    updatePracticeChecklist('understand');
                     wizardCelebrate();
                     wizardSay("Your code ran! Ready to try the challenge?", "Challenge \u25B6", () => {
                         completeCurrentTab('challenge');
@@ -944,22 +1039,38 @@ function initRunButtons() {
                     consolePrint(`Challenge Error: ${result.error}`, 'error');
                     if (resultEl) {
                         resultEl.classList.remove('hidden');
-                        resultEl.innerHTML = `<div style="color:var(--accent-error)">Error: ${result.error}</div>`;
+                        resultEl.innerHTML = `<div style="color:var(--accent-error)"><strong>ERROR:</strong> ${result.error}</div>`;
                     }
                     wizardError();
                     wizardSay("Not quite right. Read the error and try again!");
                 } else {
-                    consolePrint(`Challenge Output: ${result.output || '(no output)'}`, 'success');
+                    const output = (result.output || '').trim();
+                    const expected = (challenge.expectedOutput || '').trim();
+                    const passed = expected ? output === expected : true;
+
+                    consolePrint(`Output: ${output || '(no output)'}`, passed ? 'success' : 'warning');
+
                     if (resultEl) {
                         resultEl.classList.remove('hidden');
-                        resultEl.innerHTML = `<div style="color:var(--accent-success)">Output: ${result.output || '(no output)'}</div>`;
+                        if (passed) {
+                            resultEl.innerHTML = `<div style="color:var(--accent-success)"><strong>CORRECT!</strong> Output matches expected result.</div>`;
+                        } else if (expected) {
+                            resultEl.innerHTML = `<div style="color:var(--accent-warning)"><strong>OUTPUT:</strong> ${output}<br><strong>EXPECTED:</strong> ${expected}</div>`;
+                        } else {
+                            resultEl.innerHTML = `<div style="color:var(--accent-success)"><strong>OUTPUT:</strong> ${output}</div>`;
+                        }
                     }
-                    const toTest = document.getElementById('btn-to-test');
-                    if (toTest) toTest.classList.remove('hidden');
-                    wizardCelebrate();
-                    wizardSay("Excellent! Now prove it with the tests!", "Run Tests \u25B6", () => {
-                        completeCurrentTab('test');
-                    });
+
+                    if (passed) {
+                        const toTest = document.getElementById('btn-to-test');
+                        if (toTest) toTest.classList.remove('hidden');
+                        wizardCelebrate();
+                        wizardSay("Excellent! Now prove it in the Final Test — from memory!", "Final Test \u25B6", () => {
+                            completeCurrentTab('test');
+                        });
+                    } else {
+                        wizardSay("Almost! Your output doesn't match yet. Check the expected output and try again.");
+                    }
                 }
             } catch (err) {
                 consolePrint(`Failed: ${err.message}`, 'error');
@@ -974,47 +1085,85 @@ function initRunButtons() {
     if (btnChallengeReset) {
         btnChallengeReset.addEventListener('click', () => {
             if (window._challengeEditor) {
-                const code = lessonData.challengeStart || lessonData.goCode || '';
+                const code = challenge.starterCode || lessonData.goCode || '';
                 window._challengeEditor.setValue(code);
                 consolePrint('Challenge reset.', 'warning');
             }
         });
     }
 
-    // Run tests
+    // Test reset
+    const btnTestReset = document.getElementById('btn-test-reset');
+    if (btnTestReset) {
+        btnTestReset.addEventListener('click', () => {
+            if (window._testEditor) {
+                window._testEditor.setValue(`package main\n\nimport "fmt"\n\nfunc main() {\n\t// Write your solution here\n\tfmt.Println()\n}\n`);
+                consolePrint('Test code cleared.', 'warning');
+            }
+        });
+    }
+
+    // Run tests — independent! Uses test editor code, not challenge code
     const btnTests = document.getElementById('btn-run-tests');
     if (btnTests) {
         btnTests.addEventListener('click', async () => {
-            consolePrint('Running tests...', 'info');
+            if (!window._testEditor) return;
+            const code = window._testEditor.getValue();
+
+            if (code.trim().length < 30) {
+                consolePrint('Write your solution first before running the test!', 'warning');
+                wizardSay("You need to write your solution code first! Remember what you learned.");
+                return;
+            }
+
+            consolePrint('Running test...', 'info');
             btnTests.disabled = true;
             try {
-                const code = window._challengeEditor ? window._challengeEditor.getValue() : (lessonData.goCode || '');
                 const result = await runner.run(code);
                 const resultsEl = document.getElementById('test-results');
+
                 if (result.error) {
                     consolePrint(`Test Error: ${result.error}`, 'error');
-                    if (resultsEl) resultsEl.innerHTML = `<div style="color:var(--accent-error)">FAIL: ${result.error}</div>`;
+                    if (resultsEl) resultsEl.innerHTML = `<div style="color:var(--accent-error)"><strong>FAIL:</strong> ${result.error}</div>`;
                     wizardError();
+                    wizardSay("There's an error in your code. Think back to what you learned and try again!");
                 } else {
-                    consolePrint('All tests passed!', 'success');
-                    if (resultsEl) resultsEl.innerHTML = `<div style="color:var(--accent-success)">PASS: All tests passed!</div>`;
+                    const output = (result.output || '').trim();
+                    const expected = (testCases.length > 0 && testCases[0].expectedOutput)
+                        ? testCases[0].expectedOutput.trim()
+                        : (challenge.expectedOutput || '').trim();
+                    const passed = expected ? output === expected : output.length > 0;
 
-                    markQuestDone('test');
-                    updateJourneyWorld(4);
-                    wizardCelebrate();
-                    wizardSay("You did it! Level complete! You're becoming a Go master!");
+                    if (resultsEl) {
+                        if (passed) {
+                            resultsEl.innerHTML = `<div style="color:var(--accent-success)"><strong>PASS!</strong> Your output matches perfectly.<br>Output: ${output}</div>`;
+                        } else if (expected) {
+                            resultsEl.innerHTML = `<div style="color:var(--accent-error)"><strong>FAIL:</strong> Output doesn't match.<br><strong>YOUR OUTPUT:</strong> ${output}<br><strong>EXPECTED:</strong> ${expected}</div>`;
+                        } else {
+                            resultsEl.innerHTML = `<div style="color:var(--accent-success)"><strong>PASS!</strong> Code ran successfully.<br>Output: ${output}</div>`;
+                        }
+                    }
 
-                    const state = progress.getLessonState(lessonData.slug);
-                    state.testDone = true;
-                    state.completed = true;
-                    progress.saveLessonState(lessonData.slug, state);
+                    if (passed) {
+                        consolePrint('TEST PASSED! Level complete!', 'success');
+                        exitTestMode();
+                        markQuestDone('test');
+                        updateJourneyWorld(4);
+                        wizardCelebrate();
+                        wizardSay("You did it FROM MEMORY! You truly understand this concept now!");
 
-                    const xpEarned = lessonData.xpReward || 50;
-                    const coinsEarned = lessonData.coinReward || 20;
-                    gamification.awardXP(xpEarned);
-                    gameState.addCoins(coinsEarned);
+                        const xpEarned = lessonData.xpReward || 50;
+                        const coinsEarned = lessonData.coinReward || 20;
+                        progress.completeTab(lessonData.slug, 'test', xpEarned, coinsEarned);
+                        gamification.awardXP(xpEarned);
+                        gameState.addCoins(coinsEarned);
 
-                    setTimeout(() => showLessonComplete(xpEarned, coinsEarned), 2000);
+                        setTimeout(() => showLessonComplete(xpEarned, coinsEarned), 2000);
+                    } else {
+                        consolePrint('Test failed — output mismatch.', 'error');
+                        wizardError();
+                        wizardSay("Not quite right yet. Think about what you learned and try again!");
+                    }
                 }
             } catch (err) {
                 consolePrint(`Failed: ${err.message}`, 'error');

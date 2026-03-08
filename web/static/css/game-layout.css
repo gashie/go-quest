@@ -37,6 +37,10 @@ body.game-mode .CodeMirror {
 body.game-mode .CodeMirror-scroll { min-height: 100px; }
 body.game-mode .tab-panel { display: none !important; }
 body.game-mode .tab-panel.active { display: flex !important; flex-direction: column; }
+body.game-mode .pane-label { font-size: 0.6rem !important; padding: 2px 8px !important; margin-bottom: 4px !important; }
+body.game-mode .compare-split, body.game-mode .practice-split { gap: 0.5rem !important; }
+body.game-mode .learn-content h2 { font-size: 0.78rem !important; margin-bottom: 0.5rem !important; }
+body.game-mode pre, body.game-mode code { font-size: 0.65rem !important; line-height: 1.4 !important; }
 
 /* ============================================
    GRID: 2 cols top, full-width bottom row
@@ -189,19 +193,229 @@ body.game-mode .tab-panel.active { display: flex !important; flex-direction: col
 .tab-panel { flex-direction: column; flex: 1; overflow: hidden; min-height: 0; min-width: 0; }
 .editor-area { flex: 1; overflow: auto; padding: 0; min-height: 0; min-width: 0; }
 
-/* Test fallback when no test code */
-.test-fallback {
+/* ---- TAB BRIEFING CARDS ---- */
+.tab-briefing {
+    flex-shrink: 0;
+    padding: 8px 10px 6px;
+    background: linear-gradient(135deg, rgba(0,173,216,0.06) 0%, rgba(17,26,38,0.9) 100%);
+    border-bottom: 1px solid var(--panel-border);
+    overflow-y: auto;
+    max-height: 180px;
+}
+.briefing-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+.briefing-icon { font-size: 0.9rem; }
+.briefing-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+.briefing-title-row h4 {
+    margin: 0;
+    font-size: 0.7rem;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.briefing-badge {
+    font-size: 0.5rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.practice-badge { background: rgba(59,130,246,0.25); color: #60a5fa; border: 1px solid rgba(59,130,246,0.4); }
+.challenge-badge { background: rgba(245,158,11,0.25); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); }
+.test-badge { background: rgba(239,68,68,0.25); color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
+
+.briefing-body {
+    padding-left: 2px;
+}
+.briefing-goal {
+    font-size: 0.62rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 4px;
+}
+
+/* Practice checklist */
+.briefing-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.58rem;
+    color: var(--text-muted);
+    padding: 2px 0;
+}
+.checklist-item.done { color: var(--accent-success); }
+.checklist-item.done .check-box { background: var(--accent-success); border-color: var(--accent-success); }
+.checklist-item.done .check-box::after { content: '\2713'; color: #fff; font-size: 0.45rem; }
+.check-box {
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--panel-border-light);
+    border-radius: 2px;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex: 1;
-    min-height: 120px;
-    background: var(--panel-inner-bg);
+    flex-shrink: 0;
 }
-.test-fallback-content {
+
+/* Challenge mission box */
+.challenge-mission-box {
+    background: var(--panel-inner-bg);
+    border: 1px solid var(--panel-border);
+    border-left: 3px solid var(--accent-go);
+    border-radius: 4px;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+}
+.challenge-mission-box .mission-label,
+.test-task-box .mission-label {
+    font-size: 0.5rem;
+    font-weight: 800;
+    color: var(--accent-go);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+}
+.challenge-mission-box p,
+.test-task-box p {
+    font-size: 0.62rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Expected output box */
+.challenge-expect, .test-expect {
+    background: rgba(16,185,129,0.08);
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+}
+.expect-label {
+    font-size: 0.5rem;
+    font-weight: 800;
+    color: var(--accent-success);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+}
+.challenge-expect pre, .test-expect pre {
+    font-size: 0.6rem !important;
+    line-height: 1.4;
+    margin: 0;
+    color: var(--accent-success);
+    background: transparent;
+    padding: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* Challenge hints */
+.challenge-hints-box {
+    margin-top: 2px;
+}
+.hint-toggle-btn {
+    background: none;
+    border: 1px solid var(--panel-border);
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.55rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.hint-toggle-btn:hover { color: var(--text-primary); border-color: var(--panel-border-light); }
+.hint-content {
+    font-size: 0.58rem;
+    color: var(--text-secondary);
+    padding: 4px 8px;
+    margin-top: 3px;
+    background: rgba(245,158,11,0.08);
+    border-radius: 3px;
+    border: 1px solid rgba(245,158,11,0.2);
+    line-height: 1.5;
+}
+
+/* Challenge result */
+.challenge-result-box {
+    padding: 6px 10px;
+    font-size: 0.62rem;
+    border-top: 1px solid var(--panel-border);
+    flex-shrink: 0;
+}
+
+/* Test rules */
+.test-rules {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    margin-bottom: 6px;
+}
+.rule-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    padding: 3px 6px;
+    background: rgba(239,68,68,0.06);
+    border-radius: 3px;
+    border: 1px solid rgba(239,68,68,0.15);
+}
+.rule-icon { font-size: 0.6rem; flex-shrink: 0; }
+
+/* Test task box */
+.test-task-box {
+    background: var(--panel-inner-bg);
+    border: 1px solid var(--panel-border);
+    border-left: 3px solid #f87171;
+    border-radius: 4px;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+}
+.test-task-box .mission-label { color: #f87171; }
+
+/* Test results */
+.test-results-box {
+    padding: 6px 10px;
+    font-size: 0.62rem;
+    border-top: 1px solid var(--panel-border);
+    flex-shrink: 0;
+}
+
+/* Test mode lock indicator */
+.panel-tab.test-locked {
+    opacity: 0.2 !important;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+}
+.test-lock-banner {
     text-align: center;
-    padding: 20px;
-    max-width: 320px;
+    padding: 3px 8px;
+    background: rgba(239,68,68,0.15);
+    color: #f87171;
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid rgba(239,68,68,0.25);
+    flex-shrink: 0;
 }
 
 /* Prevent code blocks from overflowing panels */
@@ -214,8 +428,8 @@ body.game-mode .tab-panel.active { display: flex !important; flex-direction: col
 }
 .panel-buttons {
     display: flex;
-    gap: 6px;
-    padding: 6px 10px;
+    gap: 5px;
+    padding: 0 8px;
     background: linear-gradient(180deg, var(--panel-inner-bg) 0%, rgba(17,26,38,0.95) 100%);
     border-top: 2px solid var(--panel-border);
     flex-shrink: 0;
@@ -224,7 +438,9 @@ body.game-mode .tab-panel.active { display: flex !important; flex-direction: col
     justify-content: flex-start;
     position: relative;
     z-index: 600;
-    min-height: 40px;
+    height: 36px;
+    min-height: 36px;
+    max-height: 36px;
 }
 
 /* ---- GUIDED LEARN TAB ---- */
@@ -319,7 +535,7 @@ body.game-mode .tab-panel.active { display: flex !important; flex-direction: col
 .compare-code-pane {
     animation: codeFadeIn 0.5s ease;
 }
-.compare-code-pane pre { font-size: 0.62rem; line-height: 1.4; }
+.compare-code-pane pre { font-size: 0.65rem; line-height: 1.4; }
 @keyframes codeFadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -328,14 +544,14 @@ body.game-mode .tab-panel.active { display: flex !important; flex-direction: col
     display: inline-block;
     padding: 2px 8px;
     border-radius: 4px;
-    font-size: 0.6rem;
+    font-size: 0.65rem;
     font-weight: 700;
     text-transform: uppercase;
     margin-bottom: 4px;
 }
 .compare-step-label {
     padding: 6px 12px;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     color: var(--text-secondary);
     background: var(--panel-bg);
     border-bottom: 1px solid var(--panel-border);
@@ -803,66 +1019,7 @@ body.game-mode .tab-panel.active { display: flex !important; flex-direction: col
 .console-line.warning .prompt { color: var(--accent-warning); }
 
 /* ---- Tab Instruction Bar (Practice/Challenge/Test) ---- */
-.tab-instructions {
-    padding: 8px 12px;
-    background: linear-gradient(180deg, rgba(0,173,216,0.08) 0%, var(--panel-inner-bg) 100%);
-    border-bottom: 1px solid var(--panel-border);
-    flex-shrink: 0;
-}
-.tab-instructions h4 {
-    font-size: 0.72rem;
-    color: var(--accent-go);
-    margin-bottom: 3px;
-    font-weight: 700;
-}
-.tab-instructions p {
-    font-size: 0.65rem;
-    color: var(--text-secondary);
-    line-height: 1.45;
-    margin: 0;
-}
-.tab-instructions ul {
-    margin: 3px 0 0 0;
-    padding-left: 14px;
-    font-size: 0.62rem;
-    color: var(--text-secondary);
-    line-height: 1.5;
-    list-style: none;
-}
-.tab-instructions ul li::before {
-    content: '\25B8 ';
-    color: var(--accent-go);
-    font-weight: 700;
-}
-.tab-instructions .instruction-highlight {
-    color: var(--accent-go);
-    font-weight: 700;
-}
-.tab-instructions .instruction-steps {
-    display: flex;
-    gap: 12px;
-    margin-top: 4px;
-    flex-wrap: wrap;
-}
-.tab-instructions .step-num {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.6rem;
-    color: var(--text-secondary);
-}
-.tab-instructions .step-num strong {
-    background: var(--accent-go);
-    color: #fff;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.5rem;
-    flex-shrink: 0;
-}
+/* (old tab-instructions removed — replaced by .tab-briefing) */
 
 /* ============================================
    3D Game Buttons — arcade/RPG style
@@ -871,24 +1028,26 @@ body.game-mode .tab-panel.active { display: flex !important; flex-direction: col
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    padding: 5px 12px;
-    border: 2px solid rgba(255,255,255,0.15);
+    gap: 3px;
+    padding: 0 10px;
+    height: 26px;
+    border: 1.5px solid rgba(255,255,255,0.15);
     border-bottom: none;
-    border-radius: 5px;
+    border-radius: 4px;
     font-weight: 900;
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
     cursor: pointer;
     position: relative;
     transition: transform 0.08s ease, filter 0.15s, box-shadow 0.15s;
     font-family: inherit;
     color: #fff;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
     overflow: hidden;
     white-space: nowrap;
     flex-shrink: 0;
+    line-height: 1;
 }
 .btn-game::before {
     content: '';
@@ -899,47 +1058,47 @@ body.game-mode .tab-panel.active { display: flex !important; flex-direction: col
     border-radius: 4px 4px 0 0;
     pointer-events: none;
 }
-.btn-game:active { transform: translateY(3px); }
+.btn-game:active { transform: translateY(2px); }
 .btn-game:disabled { opacity: 0.35; cursor: not-allowed; transform: none; filter: grayscale(0.3); }
 
 .btn-game-run {
     background: linear-gradient(180deg, #4ade80 0%, #22c55e 40%, #16a34a 100%);
-    box-shadow: 0 3px 0 #0d6e2c, 0 4px 8px rgba(74, 222, 128, 0.3), inset 0 1px 0 rgba(255,255,255,0.25);
+    box-shadow: 0 2px 0 #0d6e2c, 0 3px 6px rgba(74, 222, 128, 0.25);
 }
-.btn-game-run:active { box-shadow: 0 1px 0 #0d6e2c; }
+.btn-game-run:active { box-shadow: 0 0 0 #0d6e2c; }
 .btn-game-run:hover { filter: brightness(1.1); }
 
 .btn-game-reset {
     background: linear-gradient(180deg, #f87171 0%, #ef4444 40%, #dc2626 100%);
-    box-shadow: 0 3px 0 #991b1b, 0 4px 8px rgba(248, 113, 113, 0.25), inset 0 1px 0 rgba(255,255,255,0.2);
+    box-shadow: 0 2px 0 #991b1b, 0 3px 6px rgba(248, 113, 113, 0.2);
 }
-.btn-game-reset:active { box-shadow: 0 1px 0 #991b1b; }
+.btn-game-reset:active { box-shadow: 0 0 0 #991b1b; }
 .btn-game-reset:hover { filter: brightness(1.1); }
 
 .btn-game-hint {
     background: linear-gradient(180deg, #fcd34d 0%, #fbbf24 40%, #d97706 100%);
-    box-shadow: 0 3px 0 #92400e, 0 4px 8px rgba(251, 191, 36, 0.25), inset 0 1px 0 rgba(255,255,255,0.3);
+    box-shadow: 0 2px 0 #92400e, 0 3px 6px rgba(251, 191, 36, 0.2);
     color: #1a1a1a;
     text-shadow: 0 1px 2px rgba(255,255,255,0.3);
 }
-.btn-game-hint:active { box-shadow: 0 1px 0 #92400e; }
+.btn-game-hint:active { box-shadow: 0 0 0 #92400e; }
 .btn-game-hint:hover { filter: brightness(1.1); }
 
 .btn-game-submit {
     background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 40%, #2563eb 100%);
-    box-shadow: 0 3px 0 #1d4ed8, 0 4px 8px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+    box-shadow: 0 2px 0 #1d4ed8, 0 3px 6px rgba(59, 130, 246, 0.25);
 }
-.btn-game-submit:active { box-shadow: 0 1px 0 #1d4ed8; }
+.btn-game-submit:active { box-shadow: 0 0 0 #1d4ed8; }
 .btn-game-submit:hover { filter: brightness(1.1); }
 
 .btn-game-solution {
     background: linear-gradient(180deg, #c084fc 0%, #a78bfa 40%, #7c3aed 100%);
-    box-shadow: 0 3px 0 #5b21b6, 0 4px 8px rgba(167, 139, 250, 0.25), inset 0 1px 0 rgba(255,255,255,0.2);
+    box-shadow: 0 2px 0 #5b21b6, 0 3px 6px rgba(167, 139, 250, 0.2);
 }
-.btn-game-solution:active { box-shadow: 0 1px 0 #5b21b6; }
+.btn-game-solution:active { box-shadow: 0 0 0 #5b21b6; }
 .btn-game-solution:hover { filter: brightness(1.1); }
 
-.btn-game-sm { padding: 3px 8px; font-size: 0.6rem; border-radius: 4px; }
+.btn-game-sm { padding: 0 6px; height: 22px; font-size: 0.55rem; border-radius: 3px; }
 .btn-game-sm:active { transform: translateY(2px); }
 
 /* ---- Bottom Toolbar ---- */
