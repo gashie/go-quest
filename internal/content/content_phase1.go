@@ -418,6 +418,8 @@ func main() {
 		"functions": {
 			{Name: "add(3, 5) returns 8", ExpectedOut: "8\n"},
 			{Name: "add(0, 0) returns 0", ExpectedOut: "0\n", WrapperCode: `func main() { fmt.Println(add(0, 0)) }`},
+			{Name: "add(-1, 1) returns 0", ExpectedOut: "0\n", WrapperCode: `func main() { fmt.Println(add(-1, 1)) }`},
+			{Name: "add(100, 200) returns 300", ExpectedOut: "300\n", WrapperCode: `func main() { fmt.Println(add(100, 200)) }`},
 		},
 		"variables": {
 			{Name: "Declares and prints variables", ExpectedOut: "GoQuest 5 true\n"},

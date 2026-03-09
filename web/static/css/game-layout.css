@@ -24,8 +24,8 @@ body.game-mode .main-nav {
     display: none !important;
 }
 
-/* Override lesson.css CodeMirror conflicts */
-body.game-mode .CodeMirror {
+/* Override lesson.css CodeMirror conflicts — but NOT inside accordion editor-frames */
+body.game-mode .tutorial-panel .CodeMirror {
     height: 100% !important;
     max-height: none !important;
     min-height: 100px;
@@ -34,7 +34,7 @@ body.game-mode .CodeMirror {
     font-size: 0.8rem;
     line-height: 1.5;
 }
-body.game-mode .CodeMirror-scroll { min-height: 100px; }
+body.game-mode .tutorial-panel .CodeMirror-scroll { min-height: 100px; }
 body.game-mode .tab-panel { display: none !important; }
 body.game-mode .tab-panel.active { display: flex !important; flex-direction: column; }
 body.game-mode .pane-label { font-size: 0.6rem !important; padding: 2px 8px !important; margin-bottom: 4px !important; }
@@ -43,50 +43,273 @@ body.game-mode .learn-content h2 { font-size: 0.78rem !important; margin-bottom:
 body.game-mode pre, body.game-mode code { font-size: 0.65rem !important; line-height: 1.4 !important; }
 
 /* ============================================
-   GRID: 2 cols top, full-width bottom row
+   GRID: All panels are direct grid children
+   Layouts: classic | tutorial | editor
    ============================================ */
 .game-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: 1fr 220px;
     height: calc(100vh - 38px);
     gap: 0;
     overflow: hidden;
 }
 
-/* ---- Tutorial Panel (top-left) ---- */
-.tutorial-panel {
-    grid-row: 1;
-    grid-column: 1;
+/* Shared panel styles */
+.tutorial-panel,
+.editor-panel,
+.grid-mission,
+.grid-journey,
+.grid-console,
+.grid-quest {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background: var(--panel-bg);
+    min-height: 0;
+    min-width: 0;
+}
+
+/* ---- CLASSIC LAYOUT (default) ---- */
+.game-layout[data-layout="classic"] {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 220px;
+    grid-template-areas:
+        "tutorial editor"
+        "bottom   bottom";
+}
+.game-layout[data-layout="classic"] .tutorial-panel {
+    grid-area: tutorial;
     border-right: 2px solid var(--panel-border);
-    background: var(--panel-bg);
-    min-height: 0;
-    min-width: 0;
 }
-
-/* ---- Code Editor Panel (top-right) ---- */
-.editor-panel {
-    grid-row: 1;
-    grid-column: 2;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background: var(--panel-bg);
-    min-height: 0;
-    min-width: 0;
+.game-layout[data-layout="classic"] .editor-panel {
+    grid-area: editor;
 }
-
-/* ---- Bottom Row (spans both columns) ---- */
-.bottom-row {
-    grid-row: 2;
-    grid-column: 1 / -1;
-    display: flex;
+/* In classic, the 4 bottom panels sit in the "bottom" area via a sub-flex */
+.game-layout[data-layout="classic"] .grid-mission,
+.game-layout[data-layout="classic"] .grid-journey,
+.game-layout[data-layout="classic"] .grid-console,
+.game-layout[data-layout="classic"] .grid-quest {
+    grid-area: auto; /* let them flow naturally */
+}
+/* Classic bottom: we need a wrapper-like behavior. Use subgrid trick:
+   Place all 4 bottom panels in row 2, spanning columns */
+.game-layout[data-layout="classic"] {
+    grid-template-columns: 18% 20% 1fr 25%;
+    grid-template-rows: 1fr 220px;
+    grid-template-areas:
+        "tutorial tutorial editor  editor"
+        "mission  journey  console quest";
+}
+.game-layout[data-layout="classic"] .tutorial-panel { grid-area: tutorial; }
+.game-layout[data-layout="classic"] .editor-panel { grid-area: editor; }
+.game-layout[data-layout="classic"] .grid-mission {
+    grid-area: mission;
+    border-right: 2px solid var(--panel-border);
     border-top: 2px solid var(--panel-border);
-    min-height: 0;
+}
+.game-layout[data-layout="classic"] .grid-journey {
+    grid-area: journey;
+    border-right: 2px solid var(--panel-border);
+    border-top: 2px solid var(--panel-border);
+}
+.game-layout[data-layout="classic"] .grid-console {
+    grid-area: console;
+    border-right: 2px solid var(--panel-border);
+    border-top: 2px solid var(--panel-border);
+}
+.game-layout[data-layout="classic"] .grid-quest {
+    grid-area: quest;
+    border-top: 2px solid var(--panel-border);
+}
+
+/* ---- TUTORIAL LAYOUT ----
+   Tutorial stretches top-left, Mission+Journey stacked on right side
+   Console + Quest span the bottom
+   Editor panel is HIDDEN */
+.game-layout[data-layout="tutorial"] {
+    grid-template-columns: 1fr 260px;
+    grid-template-rows: 1fr 1fr 200px;
+    grid-template-areas:
+        "tutorial mission"
+        "tutorial journey"
+        "console  quest";
+}
+.game-layout[data-layout="tutorial"] .tutorial-panel {
+    grid-area: tutorial;
+    border-right: 2px solid var(--panel-border);
+}
+.game-layout[data-layout="tutorial"] .editor-panel {
+    display: none !important;
+}
+.game-layout[data-layout="tutorial"] .grid-mission {
+    grid-area: mission;
+    border-bottom: 2px solid var(--panel-border);
+}
+.game-layout[data-layout="tutorial"] .grid-journey {
+    grid-area: journey;
+}
+.game-layout[data-layout="tutorial"] .grid-console {
+    grid-area: console;
+    border-top: 2px solid var(--panel-border);
+    border-right: 2px solid var(--panel-border);
+}
+.game-layout[data-layout="tutorial"] .grid-quest {
+    grid-area: quest;
+    border-top: 2px solid var(--panel-border);
+}
+
+/* ---- EDITOR LAYOUT ----
+   Editor takes full width top, bottom panels below
+   Tutorial panel is HIDDEN */
+.game-layout[data-layout="editor"] {
+    grid-template-columns: 18% 20% 1fr 25%;
+    grid-template-rows: 1fr 200px;
+    grid-template-areas:
+        "editor  editor  editor  editor"
+        "mission journey console quest";
+}
+.game-layout[data-layout="editor"] .tutorial-panel {
+    display: none !important;
+}
+.game-layout[data-layout="editor"] .editor-panel {
+    grid-area: editor;
+}
+.game-layout[data-layout="editor"] .grid-mission {
+    grid-area: mission;
+    border-right: 2px solid var(--panel-border);
+    border-top: 2px solid var(--panel-border);
+}
+.game-layout[data-layout="editor"] .grid-journey {
+    grid-area: journey;
+    border-right: 2px solid var(--panel-border);
+    border-top: 2px solid var(--panel-border);
+}
+.game-layout[data-layout="editor"] .grid-console {
+    grid-area: console;
+    border-right: 2px solid var(--panel-border);
+    border-top: 2px solid var(--panel-border);
+}
+.game-layout[data-layout="editor"] .grid-quest {
+    grid-area: quest;
+    border-top: 2px solid var(--panel-border);
+}
+
+/* ---- EDITOR LAYOUT: Panels mode (stacked cards, not tabs) ---- */
+.game-layout[data-layout="editor"] #editor-tab-bar {
+    display: none !important;
+}
+
+/* Show ALL editor panels as stacked cards */
+.game-layout[data-layout="editor"] .editor-panel .panel-content {
+    gap: 2px;
+    padding: 2px;
+}
+
+.game-layout[data-layout="editor"] .editor-panel .tab-panel {
+    display: flex !important;
+    flex-direction: column;
+    border: 2px solid var(--panel-border);
+    border-radius: 6px;
     overflow: hidden;
+    transition: flex 0.3s ease, opacity 0.3s ease;
+}
+
+.game-layout[data-layout="editor"] .editor-panel #tab-editor-placeholder {
+    display: none !important;
+}
+
+/* Phase card headers — only visible in editor layout */
+.phase-card-header {
+    display: none;
+}
+.game-layout[data-layout="editor"] .phase-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: linear-gradient(180deg, var(--panel-header-bg) 0%, #1a2a3e 100%);
+    border-bottom: 2px solid var(--panel-border);
+    flex-shrink: 0;
+    min-height: 40px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.game-layout[data-layout="editor"] .phase-card-header:hover {
+    background: linear-gradient(180deg, #243a52 0%, #1e3048 100%);
+}
+.phase-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--panel-border);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 900;
+    flex-shrink: 0;
+    transition: background 0.3s, color 0.3s;
+}
+.phase-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.phase-lock-icon {
+    margin-left: auto;
+    font-size: 1rem;
+}
+
+/* Active phase: expanded, highlighted border */
+.game-layout[data-layout="editor"] .tab-panel.phase-active {
+    flex: 1;
+    opacity: 1;
+    border-color: var(--accent-go);
+    box-shadow: 0 0 12px rgba(0,173,216,0.15);
+}
+.game-layout[data-layout="editor"] .tab-panel.phase-active .phase-num {
+    background: var(--accent-go);
+    color: #fff;
+}
+.game-layout[data-layout="editor"] .tab-panel.phase-active .phase-card-header {
+    background: linear-gradient(180deg, rgba(0,173,216,0.15) 0%, var(--panel-header-bg) 100%);
+    border-bottom-color: var(--accent-go);
+}
+
+/* Locked phase: collapsed to just the header */
+.game-layout[data-layout="editor"] .tab-panel.phase-locked {
+    flex: 0 0 auto;
+    opacity: 0.5;
+}
+.game-layout[data-layout="editor"] .tab-panel.phase-locked > *:not(.phase-card-header) {
+    display: none !important;
+}
+.game-layout[data-layout="editor"] .tab-panel.phase-locked .phase-card-header {
+    cursor: not-allowed;
+    border-bottom: none;
+}
+
+/* Completed phase: collapsed with green accent */
+.game-layout[data-layout="editor"] .tab-panel.phase-completed {
+    flex: 0 0 auto;
+    border-color: var(--accent-success);
+    opacity: 0.7;
+}
+.game-layout[data-layout="editor"] .tab-panel.phase-completed > *:not(.phase-card-header) {
+    display: none !important;
+}
+.game-layout[data-layout="editor"] .tab-panel.phase-completed .phase-num {
+    background: var(--accent-success);
+    color: #fff;
+}
+.game-layout[data-layout="editor"] .tab-panel.phase-completed .phase-card-header {
+    border-bottom: none;
+}
+.game-layout[data-layout="editor"] .tab-panel.phase-completed .phase-lock-icon::after {
+    content: ' \2713';
+    color: var(--accent-success);
 }
 
 /* ---- Panel Title Bar (shared for both panels) ---- */
@@ -399,6 +622,123 @@ body.game-mode pre, body.game-mode code { font-size: 0.65rem !important; line-he
     flex-shrink: 0;
 }
 
+/* ============================================
+   PER-PANEL CONSOLE OUTPUT
+   Each panel (practice, challenge, test) gets its own console
+   ============================================ */
+.panel-console {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    max-height: 120px;
+    min-height: 50px;
+    border-top: 1px solid var(--panel-border);
+}
+.panel-console-header {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    background: var(--panel-header-bg);
+    border-bottom: 1px solid var(--panel-header-border);
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+}
+.panel-console-clear {
+    margin-left: auto;
+    background: none;
+    border: 1px solid var(--panel-border);
+    color: var(--text-muted);
+    font-size: 0.48rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+    text-transform: uppercase;
+}
+.panel-console-clear:hover { color: var(--text-primary); border-color: var(--panel-border-light); }
+.panel-console-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #0d1117;
+}
+.panel-console-output {
+    padding: 4px 8px;
+    font-family: 'Fira Code', 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    line-height: 1.5;
+}
+.panel-console-output .console-line {
+    padding: 1px 0;
+    word-break: break-all;
+}
+.panel-console-output .console-line.error { color: #f87171; }
+.panel-console-output .console-line.success { color: #34d399; }
+.panel-console-output .console-line.warning { color: #fbbf24; }
+.panel-console-output .console-line.info { color: #60a5fa; }
+.panel-console-output .prompt { color: #6b7280; margin-right: 5px; }
+
+/* Test case result rows inside test console */
+.test-case-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 0;
+    font-size: 0.58rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.test-case-row:last-child { border-bottom: none; }
+.test-case-icon { font-size: 0.7rem; flex-shrink: 0; }
+.test-case-name { color: var(--text-secondary); flex: 1; }
+.test-case-pass { color: #34d399; }
+.test-case-fail { color: #f87171; }
+.test-case-detail {
+    font-size: 0.52rem;
+    color: var(--text-muted);
+    padding-left: 20px;
+    line-height: 1.4;
+}
+
+/* ============================================
+   CHALLENGE TYPE VISUAL DIFFERENTIATION
+   ============================================ */
+/* Fix Bug — red/warning accent */
+.tab-challenge[data-challenge-type="fix_bug"] .challenge-mission-box,
+#tab-challenge[data-challenge-type="fix_bug"] .challenge-mission-box {
+    border-left-color: #f87171;
+    background: rgba(239,68,68,0.06);
+}
+#tab-challenge[data-challenge-type="fix_bug"] .challenge-type-icon::before { content: '\1F41B'; }
+
+/* Rewrite — blue accent */
+#tab-challenge[data-challenge-type="rewrite"] .challenge-mission-box {
+    border-left-color: #60a5fa;
+    background: rgba(96,165,250,0.06);
+}
+
+/* Build — green accent */
+#tab-challenge[data-challenge-type="build"] .challenge-mission-box {
+    border-left-color: #34d399;
+    background: rgba(52,211,153,0.06);
+}
+
+/* Fill Blank — yellow accent */
+#tab-challenge[data-challenge-type="fill_blank"] .challenge-mission-box {
+    border-left-color: #fbbf24;
+    background: rgba(251,191,36,0.06);
+}
+
+/* Challenge type badges */
+.challenge-badge[data-type="fix_bug"] { background: rgba(239,68,68,0.15); color: #f87171; }
+.challenge-badge[data-type="rewrite"] { background: rgba(96,165,250,0.15); color: #60a5fa; }
+.challenge-badge[data-type="build"] { background: rgba(52,211,153,0.15); color: #34d399; }
+.challenge-badge[data-type="fill_blank"] { background: rgba(251,191,36,0.15); color: #fbbf24; }
+
 /* Test mode lock indicator */
 .panel-tab.test-locked {
     opacity: 0.2 !important;
@@ -629,47 +969,8 @@ body.game-mode pre, body.game-mode code { font-size: 0.65rem !important; line-he
 }
 
 /* ============================================
-   BOTTOM ROW SECTIONS
+   BOTTOM PANEL SECTIONS (now grid children)
    ============================================ */
-
-/* Mission (left, ~18%) */
-.bottom-mission {
-    flex: 0 0 18%;
-    display: flex;
-    flex-direction: column;
-    border-right: 2px solid var(--panel-border);
-    overflow: hidden;
-    background: var(--panel-bg);
-}
-
-/* Journey Preview (~20%) */
-.bottom-journey {
-    flex: 0 0 20%;
-    display: flex;
-    flex-direction: column;
-    border-right: 2px solid var(--panel-border);
-    overflow: hidden;
-    background: var(--panel-bg);
-}
-
-/* Console (center, ~37%) */
-.console-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    border-right: 2px solid var(--panel-border);
-    background: var(--panel-bg);
-    min-width: 0;
-}
-
-/* Quest + Inventory (right, ~25%) */
-.bottom-quest-inv {
-    flex: 0 0 25%;
-    display: flex;
-    flex-direction: column;
-    background: var(--panel-bg);
-    overflow: hidden;
-}
 
 /* Shared bottom section header */
 .bottom-section-header {
@@ -990,7 +1291,7 @@ body.game-mode pre, body.game-mode code { font-size: 0.65rem !important; line-he
 .inv-empty-msg { font-size: 0.65rem; color: var(--text-muted); text-align: center; padding: 4px; font-style: italic; }
 
 /* ---- Console ---- */
-.console-section .bottom-section-header {
+.grid-console .bottom-section-header {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -1162,7 +1463,7 @@ body.game-mode pre, body.game-mode code { font-size: 0.65rem !important; line-he
 .intro-buttons .btn-game { padding: 14px 36px; font-size: 1rem; }
 
 /* ============================================
-   WIZARD — Detailed old man with spectacles
+   GOPHER — Geeky Go mascot with tech gear
    ============================================ */
 .wizard-container {
     position: fixed;
@@ -1171,7 +1472,7 @@ body.game-mode pre, body.game-mode code { font-size: 0.65rem !important; line-he
     z-index: 9000;
     cursor: grab;
     user-select: none;
-    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.5));
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6));
     pointer-events: auto;
 }
 .wizard-body-wrap, .wizard-speech, .wizard-sound-toggle {
@@ -1183,8 +1484,8 @@ body.game-mode pre, body.game-mode code { font-size: 0.65rem !important; line-he
 
 .wizard-body-wrap {
     position: relative;
-    width: 80px;
-    height: 130px;
+    width: 110px;
+    height: 140px;
     animation: wizardFloat 3s ease-in-out infinite;
 }
 @keyframes wizardFloat {
@@ -1192,201 +1493,20 @@ body.game-mode pre, body.game-mode code { font-size: 0.65rem !important; line-he
     50% { transform: translateY(-8px); }
 }
 
-/* Hat */
-.wizard-hat {
-    position: absolute;
-    top: 0; left: 50%; transform: translateX(-50%);
-    width: 0; height: 0;
-    border-left: 20px solid transparent;
-    border-right: 20px solid transparent;
-    border-bottom: 34px solid #4c1d95;
-    z-index: 3;
-}
-.wizard-hat::before {
-    content: '';
-    position: absolute;
-    bottom: -37px; left: -24px;
-    width: 48px; height: 6px;
-    background: #6d28d9;
-    border-radius: 50%;
-}
-.wizard-hat::after {
-    content: '';
-    position: absolute;
-    top: 8px; left: -2px;
-    width: 5px; height: 5px;
-    background: #fbbf24;
-    border-radius: 50%;
-    box-shadow: 0 0 6px #fbbf24;
-}
-.wizard-hat-band {
-    position: absolute;
-    top: 30px; left: 50%; transform: translateX(-50%);
-    width: 44px; height: 5px;
-    background: linear-gradient(90deg, #fbbf24, #f59e0b, #fbbf24);
-    border-radius: 2px;
-    z-index: 4;
+/* Gopher SVG */
+.gopher-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
-/* Face */
-.wizard-face {
-    position: absolute;
-    top: 36px; left: 50%; transform: translateX(-50%);
-    width: 42px; height: 34px;
-    background: #deb887;
-    border-radius: 50%;
-    z-index: 2;
-    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.1);
+/* Talking state — animate mouth via CSS */
+.wizard-container.talking .gopher-svg {
+    animation: gopherTalk 0.3s ease infinite;
 }
-.wizard-brow {
-    position: absolute; top: 6px;
-    width: 12px; height: 4px;
-    background: #9ca3af;
-    border-radius: 3px 3px 0 0;
-    z-index: 1;
-}
-.wizard-brow.left { left: 6px; transform: rotate(-5deg); }
-.wizard-brow.right { right: 6px; transform: rotate(5deg); }
-.wizard-eye {
-    width: 8px; height: 8px;
-    background: #fff;
-    border-radius: 50%;
-    position: absolute; top: 11px;
-    border: 2px solid #92400e;
-    z-index: 2;
-    animation: wizEyeBlink 5s ease-in-out infinite;
-}
-.wizard-eye.left { left: 6px; }
-.wizard-eye.right { right: 6px; }
-.wizard-eye::after {
-    content: '';
-    width: 4px; height: 4px;
-    background: #1a1a1a;
-    border-radius: 50%;
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-}
-.wizard-spectacles {
-    position: absolute;
-    top: 14px; left: 50%; transform: translateX(-50%);
-    width: 8px; height: 2px;
-    background: #92400e;
-    z-index: 3;
-}
-@keyframes wizEyeBlink {
-    0%, 42%, 48%, 100% { transform: scaleY(1); }
-    45% { transform: scaleY(0.1); }
-}
-.wizard-nose {
-    position: absolute;
-    top: 18px; left: 50%; transform: translateX(-50%);
-    width: 5px; height: 6px;
-    background: #c49a6c;
-    border-radius: 50%;
-    z-index: 3;
-}
-.wizard-mouth {
-    position: absolute;
-    bottom: 5px; left: 50%; transform: translateX(-50%);
-    width: 8px; height: 2px;
-    background: #8b4513;
-    border-radius: 0 0 4px 4px;
-    z-index: 3;
-    transition: height 0.1s;
-}
-.wizard-container.talking .wizard-mouth {
-    height: 5px;
-    border-radius: 50%;
-    animation: mouthTalk 0.3s ease infinite;
-}
-@keyframes mouthTalk {
-    0%, 100% { height: 2px; }
-    50% { height: 6px; }
-}
-.wizard-beard {
-    position: absolute;
-    bottom: -14px; left: 50%; transform: translateX(-50%);
-    width: 26px; height: 18px;
-    background: linear-gradient(180deg, #d1d5db, #e5e7eb);
-    border-radius: 0 0 50% 50%;
-    z-index: 1;
-}
-.wizard-beard::after {
-    content: '';
-    position: absolute;
-    bottom: -4px; left: 50%; transform: translateX(-50%);
-    width: 12px; height: 8px;
-    background: #e5e7eb;
-    border-radius: 0 0 50% 50%;
-}
-
-/* Robe */
-.wizard-robe {
-    position: absolute;
-    top: 70px; left: 50%; transform: translateX(-50%);
-    width: 52px; height: 48px;
-    background: linear-gradient(180deg, #6d28d9 0%, #4c1d95 50%, #3b0764 100%);
-    border-radius: 4px 4px 18px 18px;
-    z-index: 1;
-    box-shadow: 0 3px 8px rgba(124,58,237,0.3);
-}
-.wizard-robe::before {
-    content: '';
-    position: absolute;
-    top: 6px; left: 50%; transform: translateX(-50%);
-    width: 12px; height: 12px;
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
-    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-}
-
-/* Arms */
-.wizard-arm {
-    position: absolute; top: 76px;
-    width: 8px; height: 24px;
-    background: #6d28d9;
-    border-radius: 4px;
-    z-index: 0;
-}
-.wizard-arm.left { left: 10px; transform: rotate(15deg); }
-.wizard-arm.right { right: 6px; transform: rotate(-20deg); transform-origin: top center; }
-
-/* Staff */
-.wizard-staff {
-    position: absolute;
-    top: 14px; right: -6px;
-    width: 4px; height: 110px;
-    background: linear-gradient(180deg, #78350f, #92400e, #78350f);
-    border-radius: 2px;
-    z-index: 5;
-}
-.wizard-staff-orb {
-    position: absolute;
-    top: -6px; left: 50%; transform: translateX(-50%);
-    width: 10px; height: 10px;
-    background: radial-gradient(circle, #a78bfa, #7c3aed);
-    border-radius: 50%;
-    box-shadow: 0 0 8px #a78bfa, 0 0 16px rgba(167,139,250,0.3);
-    animation: orbPulse 2s ease-in-out infinite;
-}
-@keyframes orbPulse {
-    0%, 100% { box-shadow: 0 0 6px #a78bfa; transform: translateX(-50%) scale(1); }
-    50% { box-shadow: 0 0 14px #a78bfa, 0 0 28px rgba(167,139,250,0.4); transform: translateX(-50%) scale(1.1); }
-}
-.staff-sparkle {
-    position: absolute;
-    top: -10px;
-    font-size: 0.6rem;
-    animation: sparkleOrbit 4s linear infinite;
-    z-index: 6;
-}
-.staff-sparkle:nth-child(2) { animation-delay: 1.3s; }
-.staff-sparkle:nth-child(3) { animation-delay: 2.6s; }
-@keyframes sparkleOrbit {
-    0% { opacity: 0; transform: rotate(0deg) translateX(10px) scale(0.5); }
-    20% { opacity: 1; transform: rotate(72deg) translateX(12px) scale(1); }
-    80% { opacity: 0.5; transform: rotate(288deg) translateX(10px) scale(0.7); }
-    100% { opacity: 0; transform: rotate(360deg) translateX(10px) scale(0.5); }
+@keyframes gopherTalk {
+    0%, 100% { filter: none; }
+    50% { filter: brightness(1.05); }
 }
 
 /* Sound toggle */
@@ -1429,7 +1549,7 @@ body.game-mode pre, body.game-mode code { font-size: 0.65rem !important; line-he
     bottom: 100%; right: -16px;
     margin-bottom: 6px;
     background: var(--panel-bg);
-    border: 2px solid #7c3aed;
+    border: 2px solid #4db8c7;
     border-radius: 10px 10px 0 10px;
     padding: 8px 12px;
     max-width: 240px;
@@ -1437,7 +1557,7 @@ body.game-mode pre, body.game-mode code { font-size: 0.65rem !important; line-he
     font-size: 0.75rem;
     line-height: 1.4;
     color: var(--text-primary);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 12px rgba(124,58,237,0.15);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 12px rgba(93,200,214,0.2);
     animation: bubbleIn 0.3s ease;
     pointer-events: auto;
 }
@@ -1511,23 +1631,122 @@ body.game-mode pre, body.game-mode code { font-size: 0.65rem !important; line-he
 .reward-xp { color: #f59e0b; }
 .reward-coins { color: #a78bfa; }
 
+/* ============================================
+   LAYOUT SWITCHER
+   ============================================ */
+.layout-switcher {
+    display: flex;
+    gap: 2px;
+    background: var(--panel-inner-bg);
+    border-radius: 5px;
+    padding: 2px;
+    border: 1px solid var(--panel-border);
+}
+.layout-btn {
+    padding: 3px 10px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.layout-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+.layout-btn.active {
+    background: var(--accent-go);
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(0,173,216,0.3);
+}
+.layout-btn.layout-locked {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.layout-btn.layout-locked:hover { opacity: 0.5; background: none; }
+.layout-btn.layout-unlocked {
+    opacity: 1;
+    cursor: pointer;
+}
+.layout-btn.layout-unlocked .lock-icon-inline { display: none; }
+
+/* (Layout-specific grid rules are defined above in the grid section) */
+
+/* Tab lock icons */
+.tab-lock {
+    font-size: 0.55rem;
+    margin-right: 2px;
+    opacity: 0.7;
+}
+.panel-tab:not(.locked) .tab-lock {
+    display: none;
+}
+
+/* Progressive unlock glow on tabs */
+.panel-tab.just-unlocked {
+    animation: tabUnlockGlow 1.2s ease;
+}
+@keyframes tabUnlockGlow {
+    0% { box-shadow: inset 0 0 0 rgba(74,222,128,0); }
+    30% { box-shadow: inset 0 0 20px rgba(74,222,128,0.4), 0 0 12px rgba(74,222,128,0.3); }
+    100% { box-shadow: inset 0 0 0 rgba(74,222,128,0); }
+}
+
+/* ---- Locked Next Lesson Button ---- */
+.toolbar-next-lesson.locked {
+    opacity: 0.4;
+    pointer-events: none;
+    cursor: not-allowed;
+    color: var(--text-muted) !important;
+}
+.toolbar-next-lesson.unlocked {
+    opacity: 1;
+    pointer-events: auto;
+    cursor: pointer;
+    color: #4ade80 !important;
+    font-weight: 700;
+    animation: nextLessonPulse 2s ease-in-out infinite;
+}
+@keyframes nextLessonPulse {
+    0%, 100% { text-shadow: none; }
+    50% { text-shadow: 0 0 8px rgba(74,222,128,0.5); }
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 1100px) {
-    .bottom-mission { flex: 0 0 16%; }
-    .bottom-journey { flex: 0 0 18%; }
-    .bottom-quest-inv { flex: 0 0 22%; }
+    .game-layout[data-layout="classic"] {
+        grid-template-columns: 16% 18% 1fr 22%;
+    }
 }
 @media (max-width: 800px) {
-    .game-layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
+    .game-layout,
+    .game-layout[data-layout="classic"],
+    .game-layout[data-layout="tutorial"],
+    .game-layout[data-layout="editor"] {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto !important;
+        grid-template-areas: none !important;
         height: auto;
         min-height: 100vh;
     }
+    .tutorial-panel,
+    .editor-panel,
+    .grid-mission,
+    .grid-journey,
+    .grid-console,
+    .grid-quest {
+        grid-area: auto !important;
+    }
     .tutorial-panel { border-right: none; border-bottom: 2px solid var(--panel-border); min-height: 40vh; }
     .editor-panel { min-height: 40vh; }
-    .bottom-row { flex-direction: column; }
-    .bottom-mission, .bottom-journey, .bottom-quest-inv { flex: none; }
-    .console-section { min-height: 120px; }
+    .game-layout[data-layout="tutorial"] .editor-panel { display: none !important; }
+    .game-layout[data-layout="editor"] .tutorial-panel { display: none !important; }
+    .grid-mission, .grid-journey, .grid-quest { min-height: 120px; }
+    .grid-console { min-height: 120px; }
     .wizard-container { display: none; }
+    .layout-switcher { display: none; }
 }
